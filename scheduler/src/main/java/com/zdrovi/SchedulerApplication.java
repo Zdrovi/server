@@ -1,4 +1,4 @@
-package com.factory;
+package com.zdrovi;
 
 import lombok.SneakyThrows;
 import org.springframework.boot.SpringApplication;

@@ -1,4 +1,4 @@
-package com.factory.exception;
+package com.zdrovi.exception;
 
 import lombok.Getter;
 

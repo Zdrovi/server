@@ -1,0 +1,31 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: ${ENV_DB_URL}
+    username: ${ENV_DB_USERNAME}
+    password: ${ENV_DB_PASSWORD}
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: none
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: info.zdrovi@gmail.com
+    password: ${ENV_SMTP_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+
+email:
+  send:
+    period: '* * * * * *'
