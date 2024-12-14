@@ -15,7 +15,7 @@
     <artifactId>parent</artifactId>
     <version>1.0.0</version>
 
-    <name>factory-parent</name>
+    <name>parent</name>
 
     <properties>
         <java.version>21</java.version>
@@ -37,7 +37,7 @@
         <gson.version>2.11.0</gson.version>
         <jackson.core.version>2.13.3</jackson.core.version>
         <springdoc-openapi-ui.version>1.2.3</springdoc-openapi-ui.version>
-        <factory-parent.version>1.0.0</factory-parent.version>
+        <parent.version>1.0.0</parent.version>
         <hibernate-validator.version>8.0.1.Final</hibernate-validator.version>
         <spring-cloud-aws.version>2.3.1</spring-cloud-aws.version>
         <spring-boot-starter.version>3.4.0</spring-boot-starter.version>

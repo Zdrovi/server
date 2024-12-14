@@ -16,9 +16,9 @@ phases:
     pre_build:
         commands:
             - echo "Fetching repository token ..."
-            - export CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain factory --domain-owner ${account_number} --region eu-central-1 --query authorizationToken --output text`
+            - export CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain zdrovi --domain-owner ${account_number} --region eu-central-1 --query authorizationToken --output text`
             - echo "Pulling settings.xml"
-            - aws s3 cp s3://factory-ci-cd/settings.xml settings.xml
+            - aws s3 cp s3://zdrovi-ci-cd/settings.xml settings.xml
     build:
         commands:
             - echo "Building ..."
