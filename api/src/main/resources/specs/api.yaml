@@ -1,0 +1,14 @@
+openapi: 3.0.3
+info:
+  title: Zdrovi Api
+  version: 1.0.0
+
+tags:
+  - name: tag
+  - name: user
+
+paths:
+  /user:
+    $ref: 'users.yaml#/paths/~1user'
+  /label:
+    $ref: 'users.yaml#/paths/~1label'

@@ -1,0 +1,41 @@
+openapi: 3.0.3
+info:
+  title: Title
+  description: Title
+  version: 1.0.0
+servers:
+  - url: 'https'
+
+components:
+  responses:
+    ClientError:
+      description: Client error
+      content:
+        application/json:
+          schema:
+            $ref: "commons.yaml#/components/schemas/Error"
+    ServerError:
+      description: Server error
+      content:
+        application/json:
+          schema:
+            $ref: "commons.yaml#/components/schemas/Error"
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+            - ALREADY_EXISTS
+            - ENTITY_RELATION_DOES_NOT_EXIST
+            - CANNOT_BIND_THIS_ENTITY_TO_ANOTHER_ENTITY
+            - CANNOT_DELETE_ENTITY_DUE_TO_EXISTING_REFERENCE
+            - UNAUTHORIZED
+            - NOT_FOUND
+            - FORBIDDEN
+            - INTERNAL_SERVER_ERROR
+            - INVALID_INPUT
+            - INACTIVE
+        description:
+          type: string
