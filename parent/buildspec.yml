@@ -1,0 +1,35 @@
+version: 0.2
+
+env:
+    variables:
+        PROJECT_NAME: factory-parent
+
+phases: 
+    install:
+        runtime-versions:
+            java: corretto17
+        commands:
+            - apt update -y
+            - apt install docker.io curl -y
+            - nohup /usr/local/bin/dockerd --host=unix:///var/run/docker.sock --host=tcp://127.0.0.1:2375 --storage-driver=overlay2&
+            - timeout 15 sh -c "until docker info; do echo .; sleep 1; done"
+    pre_build:
+        commands:
+            - echo "Fetching repository token ..."
+            - export CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain factory --domain-owner 781648067507 --region eu-central-1 --query authorizationToken --output text`
+            - echo "Pulling settings.xml"
+            - aws s3 cp s3://factory-ci-cd/settings.xml settings.xml
+    build:
+        commands:
+            - echo "Building ..."
+            - mvn -s settings.xml clean package
+    post_build:
+        commands:
+            - echo "Publishing to artifact repository ..."
+            - mvn -s settings.xml deploy
+cache:
+    paths:
+        - '/root/.m2/**/*'
+        - '/root/.npm/**/*'
+        - '/root/.pip-cache/**/*'
+        - '/root/.docker/**'

@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.4.0</version>
+        <relativePath/>
+    </parent>
+
+    <packaging>pom</packaging>
+
+    <groupId>com.zdrovi</groupId>
+    <artifactId>parent</artifactId>
+    <version>1.0.0</version>
+
+    <name>factory-parent</name>
+
+    <properties>
+        <java.version>21</java.version>
+        <spring-cloud-dependencies.version>2024.0.0-RC1</spring-cloud-dependencies.version>
+        <lombok.version>1.18.36</lombok.version>
+        <slf4j-api.version>1.7.30</slf4j-api.version>
+        <logback-classic.version>1.4.7</logback-classic.version>
+        <testcontainers-bom.version>1.18.3</testcontainers-bom.version>
+        <postgresql.version>42.6.0</postgresql.version>
+        <maven-resources-plugin.version>3.2.0</maven-resources-plugin.version>
+        <openapi-generator-maven-plugin.version>6.6.0</openapi-generator-maven-plugin.version>
+        <validation-api.version>2.0.1.Final</validation-api.version>
+        <javax.servlet-api.version>4.0.1</javax.servlet-api.version>
+        <springfox-swagger-ui.version>2.6.0</springfox-swagger-ui.version>
+        <swagger-annotations.version>2.2.20</swagger-annotations.version>
+        <jackson-databind-nullable.version>0.2.1</jackson-databind-nullable.version>
+        <okio.version>2.2.2</okio.version>
+        <okhttp.version>4.12.0</okhttp.version>
+        <gson.version>2.11.0</gson.version>
+        <jackson.core.version>2.13.3</jackson.core.version>
+        <springdoc-openapi-ui.version>1.2.3</springdoc-openapi-ui.version>
+        <factory-parent.version>1.0.0</factory-parent.version>
+        <hibernate-validator.version>8.0.1.Final</hibernate-validator.version>
+        <spring-cloud-aws.version>2.3.1</spring-cloud-aws.version>
+        <spring-boot-starter.version>3.4.0</spring-boot-starter.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud-dependencies.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-web</artifactId>
+                <version>${spring-boot-starter.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-bom</artifactId>
+                <version>${testcontainers-bom.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.postgresql</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>${postgresql.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.hibernate.validator</groupId>
+                <artifactId>hibernate-validator</artifactId>
+                <version>${hibernate-validator.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.awspring.cloud</groupId>
+                <artifactId>spring-cloud-aws-context</artifactId>
+                <version>${spring-cloud-aws.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.awspring.cloud</groupId>
+                <artifactId>spring-cloud-aws-messaging</artifactId>
+                <version>${spring-cloud-aws.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.awspring.cloud</groupId>
+                <artifactId>spring-cloud-starter-aws</artifactId>
+                <version>${spring-cloud-aws.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-ui</artifactId>
+                <version>${springdoc-openapi-ui.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+    </dependencies>
+
+    <repositories>
+        <repository>
+            <id>spring-milestones</id>
+            <name>Spring Milestones</name>
+            <url>https://repo.spring.io/milestone</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
+    <profiles>
+        <profile>
+            <id>default</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <build>
+                <finalName>${name}</finalName>
+                <plugins>
+                    <plugin>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
+                        <configuration>
+                            <excludes>
+                                <exclude>
+                                    <groupId>org.projectlombok</groupId>
+                                    <artifactId>lombok</artifactId>
+                                </exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>lib</id>
+            <activation>
+                <property>
+                    <name>buildType</name>
+                    <value>lib</value>
+                </property>
+            </activation>
+        </profile>
+    </profiles>
+
+</project>
+
