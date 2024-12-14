@@ -2,12 +2,12 @@ version: 0.2
 
 env:
     variables:
-        PROJECT_NAME: factory-parent
+        PROJECT_NAME: parent
 
 phases: 
     install:
         runtime-versions:
-            java: corretto17
+            java: corretto21
         commands:
             - apt update -y
             - apt install docker.io curl -y
@@ -16,7 +16,7 @@ phases:
     pre_build:
         commands:
             - echo "Fetching repository token ..."
-            - export CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain factory --domain-owner 781648067507 --region eu-central-1 --query authorizationToken --output text`
+            - export CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain factory --domain-owner ${account_number} --region eu-central-1 --query authorizationToken --output text`
             - echo "Pulling settings.xml"
             - aws s3 cp s3://factory-ci-cd/settings.xml settings.xml
     build:
