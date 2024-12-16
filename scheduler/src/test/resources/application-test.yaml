@@ -1,2 +1,32 @@
-server:
-  port: 9097
+# src/test/resources/application-test.yaml
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+  mail:
+    host: localhost
+    port: 3025
+    username: test
+    password: test
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+        mime:
+          charset: UTF-8
+
+email:
+  send:
+    period: '*/1 * * * * *'
+    from: test@zdrovi.com
+
+logging:
+  level:
+    com:
+      zdrovi:
+        email:
+          service: debug

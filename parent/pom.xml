@@ -23,7 +23,7 @@
         <lombok.version>1.18.36</lombok.version>
         <slf4j-api.version>1.7.30</slf4j-api.version>
         <logback-classic.version>1.4.7</logback-classic.version>
-        <testcontainers-bom.version>1.18.3</testcontainers-bom.version>
+        <testcontainers-bom.version>1.20.0</testcontainers-bom.version>
         <postgresql.version>42.6.0</postgresql.version>
         <maven-resources-plugin.version>3.2.0</maven-resources-plugin.version>
         <openapi-generator-maven-plugin.version>6.6.0</openapi-generator-maven-plugin.version>

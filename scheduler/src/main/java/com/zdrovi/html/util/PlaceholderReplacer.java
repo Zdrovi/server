@@ -1,5 +1,7 @@
 package com.zdrovi.html.util;
 
+import lombok.Builder;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -25,18 +27,21 @@ public class PlaceholderReplacer {
         }
     }
 
-    public record HtmlTemplateValues(String header,
-                                     String greeting,
-                                     String content,
-                                     String signature,
-                                     String unsubscribeUrl) {
+    @Builder
+    @Getter
+    public static final class HtmlTemplateValues {
+        private String header;
+        private String greeting;
+        private String content;
+        private String signature;
+        private String unsubscribeUrl;
     }
 
     public String replace(String html, final HtmlTemplateValues htmlTemplateValues) {
-        String result = html.replace(HEADER.getPlaceholder(), htmlTemplateValues.header);
-        result = result.replace(GREETING.getPlaceholder(), htmlTemplateValues.greeting);
-        result = result.replace(CONTENT.getPlaceholder(), htmlTemplateValues.content);
-        result = result.replace(SIGNATURE.getPlaceholder(), htmlTemplateValues.signature);
-        return result.replace(UNSUBSCRIBE_URL.getPlaceholder(), htmlTemplateValues.unsubscribeUrl);
+        String result = html.replace(HEADER.getPlaceholder(), htmlTemplateValues.getHeader());
+        result = result.replace(GREETING.getPlaceholder(), htmlTemplateValues.getGreeting());
+        result = result.replace(CONTENT.getPlaceholder(), htmlTemplateValues.getContent());
+        result = result.replace(SIGNATURE.getPlaceholder(), htmlTemplateValues.getSignature());
+        return result.replace(UNSUBSCRIBE_URL.getPlaceholder(), htmlTemplateValues.getUnsubscribeUrl());
     }
 }

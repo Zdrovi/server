@@ -1,28 +1,52 @@
 package com.zdrovi.email.service;
 
-import lombok.RequiredArgsConstructor;
+import com.zdrovi.domain.entity.Content;
+import com.zdrovi.domain.entity.User;
+import com.zdrovi.email.config.EmailConfig;
+import com.zdrovi.html.util.PlaceholderReplacer;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 
-@Slf4j
+import java.util.Objects;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 @Component
-@RequiredArgsConstructor
+@Slf4j
 public class EmailSender {
 
     private final JavaMailSender javaMailSender;
+    private final EmailConfig emailConfig;
+    private final String html;
 
-    @Scheduled(cron = "${email.send.period}")
-    void sendMail() {
-        log.info("Sending email ...");
-        var message = new SimpleMailMessage();
-        message.setFrom("info.zdrovi@gmail.com");
-        message.setTo("wggajda@gmail.com");
-        message.setSubject("Wiadomosc od Maciusia");
-        message.setText("Macius jest slodki");
-        log.info("Sending email {}", message);
-        javaMailSender.send(message);
+    @SneakyThrows
+    public EmailSender(JavaMailSender javaMailSender, EmailConfig emailConfig) {
+        this.javaMailSender = javaMailSender;
+        this.emailConfig = emailConfig;
+        html = new String(Objects.requireNonNull(this.getClass().getClassLoader()
+                        .getResourceAsStream("email.html"))
+                .readAllBytes(), UTF_8);
+    }
+
+    @SneakyThrows
+    public void sendMailToUser(final User user, final Content content) {
+        log.info("Sending email for user: {}, with content: {}", user.getName(), content.getId());
+        javaMailSender.send(mimeMessage -> {
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, UTF_8.name());
+            helper.setFrom(emailConfig.getFrom());
+            helper.setTo(user.getEmail());
+            helper.setSubject(content.getTitle());
+            helper.setText(PlaceholderReplacer.replace(html, PlaceholderReplacer.HtmlTemplateValues.builder()
+                    .header(content.getTitle())
+                    .greeting(new String("Cześć".getBytes(), UTF_8)  )// Polish greeting
+                    .content(content.getMailContent())
+                    .signature("Pozdrawiamy")  // Polish signature
+                    .unsubscribeUrl("https://zdrovi.com/wypisz-sie")
+                    .build()), true);
+            log.debug("Sending email with content {}", helper);
+        });
     }
 }

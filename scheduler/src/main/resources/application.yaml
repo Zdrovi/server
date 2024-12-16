@@ -28,4 +28,5 @@ spring:
 
 email:
   send:
-    period: '* * * * * *'
+    period: '0 */1 * * * *'
+    from: info.zdrovi@gmail.com
