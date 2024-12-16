@@ -21,7 +21,7 @@ spring:
 
 email:
   send:
-    period: '*/1 * * * * *'
+    period: '*/3 * * * * *'
     from: test@zdrovi.com
 
 logging:

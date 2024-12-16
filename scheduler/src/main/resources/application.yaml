@@ -3,9 +3,9 @@ server:
 
 spring:
   datasource:
-    url: ${ENV_DB_URL}
-    username: ${ENV_DB_USERNAME}
-    password: ${ENV_DB_PASSWORD}
+    url: jdbc:postgresql://xevix.tplinkdns.com:5432/zdrovi
+    username: postgres
+    password: 5f2Sm![2?CSb#quG
   jpa:
     properties:
       hibernate:
@@ -17,7 +17,7 @@ spring:
     host: smtp.gmail.com
     port: 587
     username: info.zdrovi@gmail.com
-    password: ${ENV_SMTP_PASSWORD}
+    password: 'aajd bbkv ckjh fonb'
     properties:
       mail:
         smtp:

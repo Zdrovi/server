@@ -3,7 +3,11 @@ package com.zdrovi;
 import com.icegreen.greenmail.configuration.GreenMailConfiguration;
 import com.icegreen.greenmail.util.GreenMail;
 import com.icegreen.greenmail.util.ServerSetup;
-import com.zdrovi.domain.entity.*;
+import com.zdrovi.commons.*;
+import com.zdrovi.commons.EntityRepository.TestCourseSetup;
+import com.zdrovi.domain.entity.Content;
+import com.zdrovi.domain.entity.User;
+import com.zdrovi.domain.entity.UserCourse;
 import com.zdrovi.domain.repository.*;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -15,14 +19,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.util.concurrent.TimeUnit;
+import java.util.UUID;
 
+import static com.zdrovi.commons.TestConstants.*;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -35,54 +39,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Testcontainers
 class SchedulerApplicationTest {
 
-    static final String EMAIL = "test@example.com";
-    static final String NAME = "Test User";
-    static final String TITLE = "Test Title";
-    static final String CONTENT = "Test Content";
-
-
-    static GreenMail greenMail;
-
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:14-alpine")
-            .withDatabaseName("testdb")
-            .withUsername("test")
-            .withPassword("test");
+    private static final PostgreSQLContainer<?> postgres = ImageRepository.getPostgresImage();
 
-    @BeforeAll
-    static void beforeAll() {
-        greenMail = new GreenMail(new ServerSetup(3025, null, "smtp"))
-                .withConfiguration(GreenMailConfiguration.aConfig()
-                        .withDisabledAuthentication());
-        greenMail.start();
-    }
-
-    @BeforeEach
-    void beforeEach() {
-        if (!greenMail.isRunning()) {
-            greenMail.start();
-        }
-
-        courseContentRepository.deleteAll();
-        userCourseRepository.deleteAll();
-        contentRepository.deleteAll();
-        courseRepository.deleteAll();
-        userRepository.deleteAll();
-
-        greenMail.reset();
-    }
-
-    @AfterAll
-    static void afterAll() {
-        greenMail.stop();
-    }
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-    }
+    private static GreenMail greenMail;
 
     @Autowired
     private UserRepository userRepository;
@@ -99,159 +59,205 @@ class SchedulerApplicationTest {
     @Autowired
     private CourseContentRepository courseContentRepository;
 
+    @Autowired
+    private EntityRepository entityRepository;
+
+    @Autowired
+    private DatabaseVerifier databaseVerifier;
+
+    @BeforeAll
+    static void beforeAll() {
+        greenMail = new GreenMail(new ServerSetup(3025, null, "smtp"))
+                .withConfiguration(GreenMailConfiguration.aConfig().withDisabledAuthentication());
+        greenMail.start();
+    }
+
+    @BeforeEach
+    void beforeEach() {
+        ensureGreenMailRunning();
+        cleanupDatabases();
+        greenMail.reset();
+    }
+
+    @AfterAll
+    static void afterAll() {
+        greenMail.stop();
+    }
 
     @Test
     void shouldSendEmailAndIncrementStageForUserWithUnfinishedCourse() {
         // Given
-        User user = setupUserWithCourseAndContent();
+        User user = entityRepository.setupUserWithCourseAndContent(
+                TITLE,
+                NAME,
+                EMAIL,
+                CONTENT
+        );
+        UserCourse userCourse = user.getUserCourses().iterator().next();
+        Content content = userCourse.getCourse().getCourseContents().iterator().next().getContent();
 
-        UserCourse userCourse = user.getUserCourses().stream().findFirst().get();
+        databaseVerifier.captureInitialState();
 
-        Content content = userCourse
-                .getCourse()
-                .getCourseContents().stream().findFirst().get()
-                .getContent();
-
-        // When
+        // When/Then
         await()
-                .atMost(5, TimeUnit.SECONDS)
+                .atMost(AWAIT_TIMEOUT, SECONDS)
                 .untilAsserted(() -> {
-                    // Then
-                    MimeMessage message = verifyEmailWasSent();
-
-                    verifyRecipient(message, user);
-                    verifySubject(message, content);
-
-                    String emailContent = GreenMailMessageDecoder.decodeContent(message);
-                    assertTrue(HtmlUtils.verifyHtmlEqual(HtmlRepository.getExpectedMessage(
-                            content.getTitle(),
-                            "Cześć",
-                            content.getMailContent(),
-                            "Pozdrawiamy",
-                            "https://zdrovi.com/wypisz-sie" + userCourse.getId()
-                    ), emailContent));
-
-                    UserCourse updatedUserCourse = userCourseRepository.findById(userCourse.getId()).orElseThrow();
-                    assertThat(updatedUserCourse.getStage()).isEqualTo(2);
+                    MimeMessage message = assertEmailReceived();
+                    assertEmailContent(message, user, content);
+                    assertStageIncremented(userCourse.getId(), 2);
                 });
+
+        databaseVerifier.verifyDatabaseIntegrity();
     }
 
-    private static void verifySubject(MimeMessage message, Content content) throws MessagingException {
-        assertThat(message.getSubject()).isEqualTo(content.getTitle());
-    }
+    @Test
+    @SneakyThrows
+    void shouldCompleteEntireCoursePathForUser() {
+        // Given
+        TestCourseSetup courseSetup = entityRepository.setupCompleteCoursePath(NAME, EMAIL);
+        databaseVerifier.captureInitialState();
 
-    private static void verifyRecipient(MimeMessage message, User user) throws MessagingException {
-        assertThat(message.getAllRecipients()[0].toString()).isEqualTo(user.getEmail());
-    }
+        verifyStageCompletion(courseSetup.user(), courseSetup.content1(), 1);
 
-    private static MimeMessage verifyEmailWasSent() {
-        MimeMessage[] receivedMessages = greenMail.getReceivedMessages();
-        assertThat(receivedMessages).hasSize(1);
-        return receivedMessages[0];
+        greenMail.reset();
+        verifyStageCompletion(courseSetup.user(), courseSetup.content2(), 2);
+
+        greenMail.reset();
+        verifyNoMoreEmails();
+
+        databaseVerifier.verifyDatabaseIntegrity();
     }
 
     @Test
     void shouldHandleNoCoursesForUser() {
         // Given
-        User user = new User();
-        user.setName("Test User");
-        user.setEmail("test@example.com");
-        userRepository.save(user);
+        entityRepository.createBasicUser(NAME, EMAIL);
+        databaseVerifier.captureInitialState();
 
-        // When
+        // When/Then
         await()
-                .atMost(5, TimeUnit.SECONDS)
+                .atMost(AWAIT_TIMEOUT, SECONDS)
                 .untilAsserted(() -> {
-                    // Then
                     assertThat(greenMail.getReceivedMessages()).isEmpty();
-                    // Verify no state changes occurred
                     assertThat(userCourseRepository.findAll()).isEmpty();
                 });
+
+        databaseVerifier.verifyDatabaseIntegrity();
     }
 
     @Test
     void shouldHandleEmailAuthenticationFailure() {
         // Given
-        greenMail.stop(); // Stop the mail server to simulate auth failure
+        greenMail.stop();
+        User user = entityRepository.setupUserWithCourseAndContent(
+                TITLE,
+                NAME,
+                EMAIL,
+                CONTENT
+        );
+        UUID userCourseId = user.getUserCourses().iterator().next().getId();
+        databaseVerifier.captureInitialState();
 
-        User user = setupUserWithCourseAndContent();
+        // When/Then
+        verifyStageUnchanged(userCourseId, 1);
 
-        // When
-        await()
-                .atMost(5, TimeUnit.SECONDS)
-                .untilAsserted(() -> {
-                    // Then
-                    // Verify stage was not incremented
-                    UserCourse updatedUserCourse = userCourseRepository.findById(user.getUserCourses()
-                            .iterator()
-                            .next()
-                            .getId()).orElseThrow();
-                    assertThat(updatedUserCourse.getStage()).isEqualTo(1);
-                });
-
-        // Cleanup
         greenMail.start();
+
+        databaseVerifier.verifyDatabaseIntegrity();
     }
 
     @Test
-    @SneakyThrows
     void shouldHandleEmailNetworkIssue() {
-        greenMail.stop();
-
         // Given
-        User user = setupUserWithCourseAndContent();
+        greenMail.stop();
+        User user = entityRepository.setupUserWithCourseAndContent(
+                TITLE,
+                NAME,
+                EMAIL,
+                CONTENT
+        );
+        UUID userCourseId = user.getUserCourses().iterator().next().getId();
+        databaseVerifier.captureInitialState();
 
-        // When
+        // When/Then
+        verifyStageUnchanged(userCourseId, 1);
+
+        databaseVerifier.verifyDatabaseIntegrity();
+    }
+
+
+    // Helper Methods
+    private void verifyStageCompletion(User user, Content content, int expectedStage) {
         await()
-                .atMost(5, TimeUnit.SECONDS)
+                .atMost(AWAIT_TIMEOUT, SECONDS)
                 .untilAsserted(() -> {
-                    // Then
-                    // Verify stage was not incremented
-                    UserCourse updatedUserCourse = userCourseRepository.findById(user.getUserCourses()
-                                    .iterator()
-                                    .next()
-                                    .getId())
-                            .orElseThrow();
-                    assertThat(updatedUserCourse.getStage()).isEqualTo(1);
+                    MimeMessage message = assertEmailReceived();
+                    assertEmailContent(message, user, content);
+                    UserCourse updatedUserCourse = userCourseRepository.findById(
+                            user.getUserCourses().iterator().next().getId()
+                    ).orElseThrow();
+                    assertThat(updatedUserCourse.getStage()).isEqualTo(expectedStage);
                 });
     }
 
-    // Helper method to reduce code duplication
-    private User setupUserWithCourseAndContent() {
-        User user = new User();
-        user.setName(NAME);
-        user.setEmail(EMAIL);
-        userRepository.save(user);
-
-        Course course = new Course();
-        course.setStages(3);
-        courseRepository.save(course);
-
-        Content content = new Content();
-        content.setPath("/test/path");
-        content.setTitle(TITLE);
-        content.setMailContent(CONTENT);
-        contentRepository.save(content);
-
-        UserCourse userCourse = new UserCourse();
-        userCourse.setUser(user);
-        userCourse.setCourse(course);
-        userCourse.setStage(1);
-        userCourseRepository.save(userCourse);
-
-        CourseContent courseContent = new CourseContent();
-        courseContent.setCourse(course);
-        courseContent.setContent(content);
-        courseContent.setStage(2);
-        courseContentRepository.save(courseContent);
-
-        user.getUserCourses().add(userCourse);
-        userRepository.save(user);
-
-        course.getCourseContents().add(courseContent);
-        courseRepository.save(course);
-
-        return user;
+    private void verifyStageUnchanged(UUID userCourseId, int expectedStage) {
+        await()
+                .atMost(AWAIT_TIMEOUT, SECONDS)
+                .untilAsserted(() -> {
+                    UserCourse userCourse = userCourseRepository.findById(userCourseId).orElseThrow();
+                    assertThat(userCourse.getStage()).isEqualTo(expectedStage);
+                });
     }
+
+    private void verifyNoMoreEmails() {
+        await()
+                .during(AWAIT_TIMEOUT, SECONDS)
+                .atMost(AWAIT_TIMEOUT + 1, SECONDS)
+                .until(() -> greenMail.getReceivedMessages().length == 0);
+    }
+
+    private void assertEmailContent(MimeMessage message, User user, Content content) throws MessagingException {
+        assertThat(message.getAllRecipients()[0].toString()).isEqualTo(user.getEmail());
+        assertThat(message.getSubject()).isEqualTo(content.getTitle());
+
+        String emailContent = GreenMailMessageDecoder.decodeContent(message);
+
+        assertTrue(HtmlUtils.verifyHtmlEqual(
+                HtmlRepository.getExpectedMessage(
+                        content.getTitle(),
+                        GREETING,
+                        content.getMailContent(),
+                        SIGNATURE,
+                        UNSUBSCRIBE_BASE_URL
+                ),
+                emailContent
+        ));
+    }
+
+    private MimeMessage assertEmailReceived() {
+        MimeMessage[] receivedMessages = greenMail.getReceivedMessages();
+        assertThat(receivedMessages).hasSize(1);
+        return receivedMessages[0];
+    }
+
+    private void assertStageIncremented(UUID userCourseId, int expectedStage) {
+        UserCourse updatedUserCourse = userCourseRepository.findById(userCourseId).orElseThrow();
+        assertThat(updatedUserCourse.getStage()).isEqualTo(expectedStage);
+    }
+
+    private void ensureGreenMailRunning() {
+        if (!greenMail.isRunning()) {
+            greenMail.start();
+        }
+    }
+
+    private void cleanupDatabases() {
+        courseContentRepository.deleteAll();
+        userCourseRepository.deleteAll();
+        contentRepository.deleteAll();
+        courseRepository.deleteAll();
+        userRepository.deleteAll();
+    }
+
 
 }

@@ -1,6 +1,6 @@
-package com.zdrovi;
+package com.zdrovi.commons;
 
-public class HtmlRepository {
+public interface HtmlRepository {
 
     static String getExpectedMessage(String title,
                                      String greeting,

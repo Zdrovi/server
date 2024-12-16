@@ -1,11 +1,8 @@
-package com.zdrovi;
+package com.zdrovi.commons;
 
-import lombok.experimental.UtilityClass;
+public interface HtmlUtils {
 
-@UtilityClass
-public class HtmlUtils {
-
-    public static boolean verifyHtmlEqual(String html1, String html2) {
+    static boolean verifyHtmlEqual(String html1, String html2) {
         String normalized1 = normalizeHtml(html1);
         String normalized2 = normalizeHtml(html2);
         return normalized1.equals(normalized2);

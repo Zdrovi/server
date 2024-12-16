@@ -1,4 +1,4 @@
-package com.zdrovi;
+package com.zdrovi.commons;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
@@ -7,7 +7,6 @@ import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 import jakarta.mail.internet.MimeUtility;
 import lombok.SneakyThrows;
-import lombok.experimental.UtilityClass;
 
 import java.io.InputStream;
 import java.util.List;
@@ -20,11 +19,10 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * Utility class for decoding GreenMail messages.
  * GreenMail API returns messages encoded as UTF-8 with `quoted printable`
  */
-@UtilityClass
-public class GreenMailMessageDecoder {
+public interface GreenMailMessageDecoder {
 
 
-    public static String decodeContent(final MimeMessage message) {
+    static String decodeContent(final MimeMessage message) {
         String multipartDecodedText = new String(
                 getMultipartBytes(message),
                 UTF_8);
