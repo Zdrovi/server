@@ -5,6 +5,11 @@ import com.zdrovi.domain.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
+
+
 @Component
 @RequiredArgsConstructor
 public class EntityRepository {
@@ -18,6 +23,12 @@ public class EntityRepository {
     public final UserCourseRepository userCourseRepository;
 
     public final CourseContentRepository courseContentRepository;
+
+    public final LabelRepository labelRepository;
+
+    public final ContentLabelRepository contentLabelRepository;
+
+    public final UserLabelRepository userLabelRepository;
 
     public User createBasicUser(String name, String email) {
         User user = new User();
@@ -102,6 +113,41 @@ public class EntityRepository {
         course.getCourseContents().add(courseContent);
         courseRepository.save(course);
 
+        return user;
+    }
+
+    public User setupUserWithLabelAndContent(String title,
+                                             String name,
+                                             String email,
+                                             String rawContent) {
+
+        User user = createBasicUser(name, email);
+
+        List<Content> contents = Stream.of("a", "b", "c", "d", "e", "f", "g", "h")
+                .map(n -> createContent(title + n, rawContent))
+                .toList();
+
+        for (var label_name : List.of("sleep", "stress", "food", "health", "stimulants")) {
+            var l = new Label();
+            l.setName(label_name);
+            labelRepository.save(l);
+
+            var userLabel = new UserLabel();
+            userLabel.setUser(user);
+            userLabel.setLabel(l);
+            userLabel.setMatching((short) 50);
+            userLabelRepository.save(userLabel);
+
+            for (int i = 0; i < contents.size(); i++)
+            {
+                var content = contents.get(i);
+                var contentLabel = new ContentLabel();
+                contentLabel.setContent(content);
+                contentLabel.setLabel(l);
+                contentLabel.setMatching((short) (100 - 10 * i));
+                contentLabelRepository.save(contentLabel);
+            }
+        }
         return user;
     }
 }

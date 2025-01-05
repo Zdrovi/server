@@ -24,6 +24,11 @@ email:
     period: '*/3 * * * * *'
     from: test@zdrovi.com
 
+algorithm:
+  label_matching_min: 0.0
+  course_length: 3
+  period: '*/2 * * * * *'
+
 logging:
   level:
     com:

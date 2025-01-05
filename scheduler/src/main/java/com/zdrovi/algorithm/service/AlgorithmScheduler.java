@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Component
@@ -19,6 +20,7 @@ public class AlgorithmScheduler {
 
     @Scheduled(cron = "${algorithm.period}")
     void process() {
+        log.info("Algorithm scheduler started");
         userRepository
                 .findAllWithoutPendingCourse()
                 .forEach(this::createCourse);

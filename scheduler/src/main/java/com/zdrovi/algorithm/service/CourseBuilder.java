@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -47,11 +48,11 @@ public class CourseBuilder {
             return;
         }
 
-        var content_scores = contentRepository
+        List<ContentScore> content_scores = contentRepository
                 .findAll()
                 .stream()
                 .map(ContentScore::new)
-                .toList();
+                .collect(Collectors.toCollection(ArrayList::new));
 
         for (var evaluator : evaluators) {
             content_scores = evaluator.evaluate(user, content_scores);

@@ -6,6 +6,7 @@ import com.icegreen.greenmail.util.ServerSetup;
 import com.zdrovi.commons.*;
 import com.zdrovi.commons.EntityRepository.TestCourseSetup;
 import com.zdrovi.domain.entity.Content;
+import com.zdrovi.domain.entity.CourseContent;
 import com.zdrovi.domain.entity.User;
 import com.zdrovi.domain.entity.UserCourse;
 import com.zdrovi.domain.repository.*;
@@ -19,6 +20,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -64,7 +67,19 @@ class SchedulerApplicationTest {
 
     @Autowired
     private DatabaseVerifier databaseVerifier;
+    @Autowired
+    private UserLabelRepository userLabelRepository;
+    @Autowired
+    private ContentLabelRepository contentLabelRepository;
+    @Autowired
+    private LabelRepository labelRepository;
 
+    @DynamicPropertySource
+    static void registerPgProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+    }
     @BeforeAll
     static void beforeAll() {
         greenMail = new GreenMail(new ServerSetup(3025, null, "smtp"))
@@ -185,6 +200,45 @@ class SchedulerApplicationTest {
         databaseVerifier.verifyDatabaseIntegrity();
     }
 
+    @Test
+    void shouldCreateCourseForUser() {
+        User user = entityRepository.setupUserWithLabelAndContent(
+                TITLE,
+                NAME,
+                EMAIL,
+                CONTENT
+        );
+
+        databaseVerifier.captureInitialState();
+
+        verifyCourseCreated(user.getId());
+    }
+
+    private void verifyCourseCreated(UUID user_id) {
+        await()
+                .atMost(AWAIT_TIMEOUT, SECONDS)
+                .untilAsserted(() -> {
+                    var user_opt = userRepository.findById(user_id);
+                    assertThat(user_opt.isPresent()).isTrue();
+
+                    var user = user_opt.get();
+                    var user_courses = userCourseRepository.findAllByUser(user);
+                    assertThat(user_courses).hasSize(1);
+                    var user_course = user_courses.iterator().next();
+                    // assertThat(user_course.getStage()).isEqualTo(0);
+                    var course = courseRepository.findById(user_course.getCourse().getId()).orElseThrow();
+                    assertThat(course.getStages()).isEqualTo(3);
+
+                    var cc = courseContentRepository.findAllByCourse(course);
+
+                    var contents = cc
+                            .stream()
+                            .map(c -> contentRepository.findById(c.getContent().getId()).orElseThrow())
+                            .toList();
+                    assertThat(contents).hasSize(3);
+                });
+    }
+
 
     // Helper Methods
     private void verifyStageCompletion(User user, Content content, int expectedStage) {
@@ -257,6 +311,9 @@ class SchedulerApplicationTest {
         contentRepository.deleteAll();
         courseRepository.deleteAll();
         userRepository.deleteAll();
+        userLabelRepository.deleteAll();
+        contentLabelRepository.deleteAll();
+        labelRepository.deleteAll();
     }
 
 

@@ -49,5 +49,9 @@ public class CourseRepositoryHelper {
         userCourse.setCourse(course);
         userCourse.setStage(0);
         userCourseRepository.save(userCourse);
+
+        courseRepository.flush();
+        courseContentRepository.flush();
+        userCourseRepository.flush();
     }
 }

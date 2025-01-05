@@ -65,8 +65,7 @@ public class LabelMatchingEvaluator implements Evaluator {
 
         return matching_entites
                 .stream()
-                .map(p -> p.getFirst().getMatching() * p.getSecond().getMatching())
-                .map(Integer::floatValue)
+                .map(p -> (float) p.getFirst().getMatching() / 100.0f * (float) p.getSecond().getMatching() / 100.0f)
                 .reduce(0f, Float::sum);
     }
 
