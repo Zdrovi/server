@@ -30,3 +30,8 @@ email:
   send:
     period: '0 */1 * * * *'
     from: info.zdrovi@gmail.com
+
+algorithm:
+  label_matching_min: 1.0
+  course_length: 5
+  period: '0 0 * * * *'
