@@ -1,7 +1,6 @@
 package com.zdrovi.algorithm.service;
 
 import com.google.common.base.Throwables;
-import com.zdrovi.domain.entity.Course;
 import com.zdrovi.domain.entity.User;
 import com.zdrovi.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;

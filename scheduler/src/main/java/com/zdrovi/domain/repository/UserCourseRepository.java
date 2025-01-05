@@ -3,7 +3,6 @@ package com.zdrovi.domain.repository;
 
 import com.zdrovi.domain.entity.User;
 import com.zdrovi.domain.entity.UserCourse;
-import com.zdrovi.domain.entity.UserLabel;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

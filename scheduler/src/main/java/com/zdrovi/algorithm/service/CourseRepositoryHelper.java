@@ -28,14 +28,6 @@ public class CourseRepositoryHelper {
         return userCourseRepository.findTopUnfinishedCourseByUserId(user.getId()).isPresent();
     }
 
-    public List<Course> getSeenCourses(User user)
-    {
-        List<Course> seenCourses = new ArrayList<>();
-        userCourseRepository.findAllByUser(user);
-
-        return seenCourses;
-    }
-
     public void save(User user, List<Content> contents) {
         Course course = new Course();
         course.setStages(contents.size());
