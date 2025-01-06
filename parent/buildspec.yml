@@ -8,25 +8,20 @@ phases:
     install:
         runtime-versions:
             java: corretto21
-        commands:
-            - apt update -y
-            - apt install docker.io curl -y
-            - nohup /usr/local/bin/dockerd --host=unix:///var/run/docker.sock --host=tcp://127.0.0.1:2375 --storage-driver=overlay2&
-            - timeout 15 sh -c "until docker info; do echo .; sleep 1; done"
     pre_build:
         commands:
             - echo "Fetching repository token ..."
-            - export CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain zdrovi --domain-owner ${account_number} --region eu-central-1 --query authorizationToken --output text`
+            - export CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain zdrovi --domain-owner 396913738285 --region eu-central-1 --query authorizationToken --output text`
             - echo "Pulling settings.xml"
-            - aws s3 cp s3://zdrovi-ci-cd/settings.xml settings.xml
+            - aws s3 cp s3://zdrovi-infra/zdrovi_settings.xml zdrovi_settings.xml
     build:
         commands:
             - echo "Building ..."
-            - mvn -s settings.xml clean package
+            - mvn -s zdrovi_settings.xml clean package
     post_build:
         commands:
             - echo "Publishing to artifact repository ..."
-            - mvn -s settings.xml deploy
+            - mvn -s zdrovi_settings.xml deploy
 cache:
     paths:
         - '/root/.m2/**/*'
