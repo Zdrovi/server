@@ -10,6 +10,7 @@ phases:
             java: corretto21
     pre_build:
         commands:
+            - cd parent
             - echo "Fetching repository token ..."
             - export CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain zdrovi --domain-owner 396913738285 --region eu-central-1 --query authorizationToken --output text`
             - echo "Pulling settings.xml"
