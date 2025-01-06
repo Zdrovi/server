@@ -3,9 +3,6 @@ version: 0.2
 env:
     variables:
         PROJECT_NAME: scheduler
-        BUILD_TYPE: default
-        S3_DEPLOY_CONFIG_DIR: applications/scheduler/
-        S3_CICD_FUNCTIONS_DESTINATION: applications/cicd
 
 phases: 
     install:
@@ -18,20 +15,22 @@ phases:
             - timeout 15 sh -c "until docker info; do echo .; sleep 1; done"
     pre_build:
         commands:
+            - cd scheduler
             - echo "Fetching repository token ..."
-            - export CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain factory --domain-owner ${account_id} --region eu-central-1 --query authorizationToken --output text`
+            - export CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain zdrovi --domain-owner 396913738285 --region eu-central-1 --query authorizationToken --output text`
             - echo "Pulling settings.xml"
-            - aws s3 cp s3://zdrovi-ci-cd/settings.xml settings.xml
-            - aws s3 cp s3://${BUCKET_NAME}/${S3_CICD_FUNCTIONS_DESTINATION}/ ./ --recursive
+            - aws s3 cp s3://zdrovi-infra/zdrovi_settings.xml zdrovi_settings.xml
     build:
         commands:
-            - if [ "$DOCKER_BUILD" = "yes" ]; then bash functions/mvn_build.sh ;fi
+            - echo "Building ..."
+            - mvn -s zdrovi_settings.xml clean package
     post_build:
         commands:
-            - if [ "$DOCKER_BUILD" = "yes" ]; then bash functions/deploy.sh ;fi
-            - echo "Sending application manifests to S3 ..."
-            - aws s3 cp kube s3://zdrovi-ci-cd/applications/$PROJECT_NAME/ --recursive
-            - echo "Deploying ..."
+            - aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 396913738285.dkr.ecr.eu-central-1.amazonaws.com
+            - docker build -t scheduler .
+            - docker tag scheduler:latest 396913738285.dkr.ecr.eu-central-1.amazonaws.com/scheduler:latest
+            - docker push 396913738285.dkr.ecr.eu-central-1.amazonaws.com/scheduler:latest
+
 cache:
     paths:
         - '/root/.m2/**/*'
