@@ -126,6 +126,14 @@
         </repository>
     </repositories>
 
+    <distributionManagement>
+        <repository>
+            <id>factory-FactoryRepository</id>
+            <name>factory-FactoryRepository</name>
+            <url>https://zdrovi-396913738285.d.codeartifact.eu-central-1.amazonaws.com/maven/zdrovi/</url>
+        </repository>
+    </distributionManagement>
+
     <profiles>
         <profile>
             <id>default</id>
