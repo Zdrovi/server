@@ -27,9 +27,9 @@ phases:
     post_build:
         commands:
             - aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 396913738285.dkr.ecr.eu-central-1.amazonaws.com
-            - docker build -t scheduler .
-            - docker tag scheduler:latest 396913738285.dkr.ecr.eu-central-1.amazonaws.com/scheduler:latest
-            - docker push 396913738285.dkr.ecr.eu-central-1.amazonaws.com/scheduler:latest
+            - docker build -t zdrovi .
+            - docker tag zdrovi:latest 396913738285.dkr.ecr.eu-central-1.amazonaws.com/zdrovi:latest
+            - docker push 396913738285.dkr.ecr.eu-central-1.amazonaws.com/zdrovi:latest
 
 cache:
     paths:
