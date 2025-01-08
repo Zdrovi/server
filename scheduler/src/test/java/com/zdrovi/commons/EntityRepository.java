@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 
@@ -127,27 +126,29 @@ public class EntityRepository {
                 .map(n -> createContent(title + n, rawContent))
                 .toList();
 
-        for (var label_name : List.of("sleep", "stress", "food", "health", "stimulants")) {
-            var l = new Label();
-            l.setName(label_name);
-            labelRepository.save(l);
-
-            var userLabel = new UserLabel();
-            userLabel.setUser(user);
-            userLabel.setLabel(l);
-            userLabel.setMatching((short) 50);
-            userLabelRepository.save(userLabel);
-
-            for (int i = 0; i < contents.size(); i++)
+        List.of("sleep", "stress", "food", "health", "stimulants")
+                .forEach(label_name ->
             {
-                var content = contents.get(i);
-                var contentLabel = new ContentLabel();
-                contentLabel.setContent(content);
-                contentLabel.setLabel(l);
-                contentLabel.setMatching((short) (100 - 10 * i));
-                contentLabelRepository.save(contentLabel);
-            }
-        }
+                var l = new Label();
+                l.setName(label_name);
+                labelRepository.save(l);
+
+                var userLabel = new UserLabel();
+                userLabel.setUser(user);
+                userLabel.setLabel(l);
+                userLabel.setMatching((short) 50);
+                userLabelRepository.save(userLabel);
+
+                for (int i = 0; i < contents.size(); i++)
+                {
+                    var content = contents.get(i);
+                    var contentLabel = new ContentLabel();
+                    contentLabel.setContent(content);
+                    contentLabel.setLabel(l);
+                    contentLabel.setMatching((short) (100 - 10 * i));
+                    contentLabelRepository.save(contentLabel);
+                }
+            });
         return user;
     }
 }

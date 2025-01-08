@@ -21,13 +21,16 @@ public class RemoveSeenEvaluator implements Evaluator {
     final ContentRepository contentRepository;
 
     @Override
-    public List<ContentScore> evaluate(User user, List<ContentScore> content_scoring) {
-        final Set<UUID> seen_contents = contentRepository
+    public List<ContentScore> evaluate(final User user, final List<ContentScore> contentScores) {
+        final Set<UUID> seenContents = contentRepository
                 .findAllSeenByUser(user.getId())
                 .stream()
                 .map(Content::getId)
                 .collect(Collectors.toSet());
-        content_scoring.removeIf(content -> seen_contents.contains(content.getContent().getId()));
-        return content_scoring;
+
+        return contentScores
+                .stream()
+                .filter(content -> !seenContents.contains(content.getContent().getId()))
+                .toList();
     }
 }

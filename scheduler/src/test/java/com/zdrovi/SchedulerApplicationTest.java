@@ -6,7 +6,6 @@ import com.icegreen.greenmail.util.ServerSetup;
 import com.zdrovi.commons.*;
 import com.zdrovi.commons.EntityRepository.TestCourseSetup;
 import com.zdrovi.domain.entity.Content;
-import com.zdrovi.domain.entity.CourseContent;
 import com.zdrovi.domain.entity.User;
 import com.zdrovi.domain.entity.UserCourse;
 import com.zdrovi.domain.repository.*;
@@ -224,8 +223,7 @@ class SchedulerApplicationTest {
                     var user = user_opt.get();
                     var user_courses = userCourseRepository.findAllByUser(user);
                     assertThat(user_courses).hasSize(1);
-                    var user_course = user_courses.iterator().next();
-                    // assertThat(user_course.getStage()).isEqualTo(0);
+                    var user_course = user_courses.getFirst();
                     var course = courseRepository.findById(user_course.getCourse().getId()).orElseThrow();
                     assertThat(course.getStages()).isEqualTo(3);
 

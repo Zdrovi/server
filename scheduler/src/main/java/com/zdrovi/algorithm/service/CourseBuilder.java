@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -41,7 +40,7 @@ public class CourseBuilder {
         evaluators.add(labelMatching);
     }
 
-    public void prepareCourse(User user)
+    public void prepareCourse(final User user)
     {
         if (courseRepositoryHelper.hasOpenCourse(user)) {
             log.warn("User {} already has open course", user.getId());
@@ -52,7 +51,7 @@ public class CourseBuilder {
                 .findAll()
                 .stream()
                 .map(ContentScore::new)
-                .collect(Collectors.toCollection(ArrayList::new));
+                .toList();
 
         for (var evaluator : evaluators) {
             content_scores = evaluator.evaluate(user, content_scores);
@@ -61,7 +60,7 @@ public class CourseBuilder {
         var course_content = content_scores
                 .stream()
                 .sorted((lhs, rhs) -> Float.compare(rhs.getScore(), lhs.getScore()))
-                .limit(config.getCourse_length())
+                .limit(config.getCourseLength())
                 .map(ContentScore::getContent)
                 .toList();
 

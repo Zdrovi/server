@@ -16,6 +16,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+
+import static org.springframework.data.domain.Sort.Direction.ASC;
 
 @Slf4j
 @Component
@@ -28,53 +31,64 @@ public class LabelMatchingEvaluator implements Evaluator {
 
     private final ContentLabelRepository contentLabelRepository;
 
+    private final float dotProductScaler = 1 / 10000.0f;
+
     // Assume that lists are sorted
     private List<Pair<UserLabel, ContentLabel>> findMatchingEntities(List<UserLabel> userLabels, List<ContentLabel> contentLabels) {
-        var list = new ArrayList<Pair<UserLabel, ContentLabel>>();
-        int i = 0, j = 0;
-        while (i < userLabels.size() && j < contentLabels.size()) {
-            UserLabel userLabel = userLabels.get(i);
-            ContentLabel contentLabel = contentLabels.get(j);
-            var userLabelLabelUUID = userLabel.getLabel().getId();
-            var contentLabelLabelUUID = contentLabel.getLabel().getId();
+        var matches = new ArrayList<Pair<UserLabel, ContentLabel>>();
 
-            if (userLabelLabelUUID.equals(contentLabelLabelUUID)) {
-                list.add(Pair.of(userLabel, contentLabel));
-                i++;
-                j++;
-                continue;
+        int userIndex = 0;
+        int contentIndex = 0;
+
+        while (userIndex < userLabels.size() && contentIndex < contentLabels.size()) {
+            UserLabel userLabel = userLabels.get(userIndex);
+            ContentLabel contentLabel = contentLabels.get(contentIndex);
+            UUID userLabelLabel = userLabel.getLabel().getId();
+            UUID contentLabelLabel = contentLabel.getLabel().getId();
+
+
+            int comparisonResult = userLabelLabel.compareTo(contentLabelLabel);
+
+            if (comparisonResult == 0) {
+                matches.add(Pair.of(userLabel, contentLabel));
+                userIndex++;
+                contentIndex++;
             }
-
-            if (userLabelLabelUUID.compareTo(contentLabelLabelUUID) < 0) {
-                i++;
+            else if (comparisonResult < 0) {
+                userIndex++;
             }
             else {
-                j++;
+                contentIndex++;
             }
         }
-        return list;
+        return matches;
     }
 
     private Float calculateMatching(final User user, final Content content)
     {
-        Sort sort = Sort.by(Sort.Direction.ASC, "label.id");
-        var userLabels = userLabelRepository.findAllByUser(user, sort);
-        var contentLabels = contentLabelRepository.findAllByContent(content, sort);
 
-        var matching_entites = findMatchingEntities(userLabels, contentLabels);
+        Sort sort = Sort.by(ASC, "label.id");
+        List<UserLabel> userLabels = userLabelRepository.findAllByUser(user, sort);
+        List<ContentLabel> contentLabels = contentLabelRepository.findAllByContent(content, sort);
 
-        return matching_entites
+        List<Pair<UserLabel, ContentLabel>> matchingEntities = findMatchingEntities(userLabels, contentLabels);
+
+        return matchingEntities
                 .stream()
-                .map(p -> (float) p.getFirst().getMatching() / 100.0f * (float) p.getSecond().getMatching() / 100.0f)
+                .map(p ->
+                        p.getFirst().getMatching().floatValue()
+                                * p.getSecond().getMatching().floatValue()
+                                * dotProductScaler)
                 .reduce(0f, Float::sum);
     }
 
-    // Returns list of Content sorted by desc matching
     @Override
-    public List<ContentScore> evaluate(final User user, List<ContentScore> content_scoring) {
+    public List<ContentScore> evaluate(final User user, final List<ContentScore> contentScores) {
         log.debug("Calculating label matching for user {}", user.getId());
-        content_scoring.forEach(cs -> cs.update_score(calculateMatching(user, cs.getContent())));
-        content_scoring.removeIf(cs -> cs.getScore() < config.getLabel_matching_min());
-        return content_scoring;
+        return contentScores
+                .stream()
+                .peek(cs -> cs.setScore(cs.getScore() + calculateMatching(user, cs.getContent())))
+                .filter(cs -> cs.getScore() >= config.getLabelMatchingMin())
+                .toList();
     }
 }

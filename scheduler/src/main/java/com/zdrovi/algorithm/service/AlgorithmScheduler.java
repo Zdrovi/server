@@ -7,16 +7,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class AlgorithmScheduler {
 
-    final UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    final CourseBuilder courseBuilder;
+    private final CourseBuilder courseBuilder;
 
     @Scheduled(cron = "${algorithm.period}")
     void process() {
