@@ -8,7 +8,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Data
 @ConfigurationProperties("algorithm")
 public class AlgorithmConfig {
-    Float labelMatchingMin;
-    Integer courseLength;
-    String period;
+    private Float labelMatchingMin;
+    private Integer courseLength;
+    private String period;
 }

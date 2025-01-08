@@ -8,6 +8,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Data
 @ConfigurationProperties("email.send")
 public class EmailConfig {
-    String from;
-    String period;
+    private String from;
+    private String period;
 }
