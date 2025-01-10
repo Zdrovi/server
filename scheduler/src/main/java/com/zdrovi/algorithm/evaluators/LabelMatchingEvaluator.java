@@ -1,6 +1,5 @@
 package com.zdrovi.algorithm.evaluators;
 
-import com.google.common.collect.Comparators;
 import com.zdrovi.algorithm.config.AlgorithmConfig;
 import com.zdrovi.algorithm.dto.ContentScore;
 import com.zdrovi.domain.entity.Content;
@@ -11,7 +10,6 @@ import com.zdrovi.domain.repository.ContentLabelRepository;
 import com.zdrovi.domain.repository.UserLabelRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 
@@ -19,8 +17,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
-
-import static org.springframework.data.domain.Sort.Direction.ASC;
 
 @Slf4j
 @Component
