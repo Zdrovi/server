@@ -2,8 +2,6 @@ package com.zdrovi.commons;
 
 import com.zdrovi.domain.repository.*;
 import lombok.RequiredArgsConstructor;
-import org.assertj.core.data.MapEntry;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,7 +17,7 @@ public class DatabaseVerifier {
 
     public enum Repositories
     {
-        User, Course, Content, UserCourse, ContentCourse;
+        User, Course, Content, UserCourse, ContentCourse
     }
 
     private final UserRepository userRepository;

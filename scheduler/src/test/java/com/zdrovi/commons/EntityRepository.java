@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static com.google.common.primitives.Shorts.max;
 import static com.google.common.primitives.Shorts.min;
 
 

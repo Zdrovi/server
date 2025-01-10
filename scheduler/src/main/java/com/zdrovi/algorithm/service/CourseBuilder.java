@@ -3,15 +3,12 @@ package com.zdrovi.algorithm.service;
 import com.zdrovi.algorithm.config.AlgorithmConfig;
 import com.zdrovi.algorithm.dto.ContentScore;
 import com.zdrovi.algorithm.evaluators.Evaluator;
-import com.zdrovi.algorithm.evaluators.LabelMatchingEvaluator;
-import com.zdrovi.algorithm.evaluators.RemoveSeenEvaluator;
 import com.zdrovi.domain.entity.User;
 import com.zdrovi.domain.repository.ContentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j

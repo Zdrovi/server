@@ -15,7 +15,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
         LEFT JOIN UserCourse uc ON u.id = uc.user.id
         LEFT JOIN Course c ON uc.course.id = c.id
         GROUP BY u.id
-        HAVING COUNT(uc.id) = 0 
+        HAVING COUNT(uc.id) = 0
            OR (COUNT(*) = SUM(CASE WHEN uc.stage = c.stages THEN 1 ELSE 0 END)
                AND SUM(CASE WHEN uc.stage = 0 THEN 1 ELSE 0 END) = 0)
         """)

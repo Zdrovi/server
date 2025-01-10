@@ -29,7 +29,7 @@ public class LabelMatchingEvaluator implements Evaluator {
 
     private final ContentLabelRepository contentLabelRepository;
 
-    private final float dotProductScaler = 1 / 10000.0f;
+    private final float dotProductFactor = 1 / 10000.0f;
 
     private List<Pair<UserLabel, ContentLabel>> findMatchingEntities(final User user, final Content content) {
 
@@ -77,7 +77,7 @@ public class LabelMatchingEvaluator implements Evaluator {
                 .map(p ->
                         p.getFirst().getMatching().floatValue()
                                 * p.getSecond().getMatching().floatValue()
-                                * dotProductScaler)
+                                * dotProductFactor)
                 .reduce(0f, Float::sum);
     }
 

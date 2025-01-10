@@ -7,7 +7,6 @@ import com.zdrovi.commons.*;
 import com.zdrovi.commons.DatabaseVerifier.Repositories;
 import com.zdrovi.commons.EntityRepository.TestCourseSetup;
 import com.zdrovi.domain.entity.Content;
-import com.zdrovi.domain.entity.Course;
 import com.zdrovi.domain.entity.User;
 import com.zdrovi.domain.entity.UserCourse;
 import com.zdrovi.domain.repository.*;
