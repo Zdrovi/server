@@ -4,8 +4,10 @@ import com.icegreen.greenmail.configuration.GreenMailConfiguration;
 import com.icegreen.greenmail.util.GreenMail;
 import com.icegreen.greenmail.util.ServerSetup;
 import com.zdrovi.commons.*;
+import com.zdrovi.commons.DatabaseVerifier.Repositories;
 import com.zdrovi.commons.EntityRepository.TestCourseSetup;
 import com.zdrovi.domain.entity.Content;
+import com.zdrovi.domain.entity.Course;
 import com.zdrovi.domain.entity.User;
 import com.zdrovi.domain.entity.UserCourse;
 import com.zdrovi.domain.repository.*;
@@ -22,6 +24,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.util.List;
 import java.util.UUID;
 
 import static com.zdrovi.commons.TestConstants.*;
@@ -209,12 +212,64 @@ class SchedulerApplicationTest {
                     TITLE,
                     NAME,
                     EMAIL,
-                    CONTENT
+                    CONTENT,
+                    MAX_MATCHING_VALUES
             );
 
             databaseVerifier.captureInitialState();
 
             verifyCourseCreated(user.getId());
+
+            databaseVerifier.verifyDatabaseIntegrity(List.of(
+                    Repositories.User
+            ));
+        }
+
+        @Test
+        void shouldNotCreateCourseIfUsersNotExist()
+        {
+            databaseVerifier.captureInitialState();
+            await()
+                    .pollDelay(3, SECONDS)
+                    .untilAsserted(() -> assertThat(true).isTrue());
+            databaseVerifier.verifyDatabaseIntegrity();
+        }
+
+        @Test
+        void shouldNotCreateCourseIfUserHasActiveCourse()
+        {
+            User user = entityRepository.setupUserWithLabelAndContent(
+                    TITLE,
+                    NAME,
+                    EMAIL,
+                    CONTENT,
+                    MAX_MATCHING_VALUES
+            );
+            entityRepository.setupActiveCourseForUser(user);
+
+            databaseVerifier.captureInitialState();
+            await()
+                    .pollDelay(3, SECONDS)
+                    .untilAsserted(() -> assertThat(true).isTrue());
+            databaseVerifier.verifyDatabaseIntegrity();
+        }
+
+        @Test
+        void shouldNotCreateCourseIfContentPurelyMatch()
+        {
+            User user = entityRepository.setupUserWithLabelAndContent(
+                    TITLE,
+                    NAME,
+                    EMAIL,
+                    CONTENT,
+                    ZEROED_MATCHING_VALUES
+            );
+
+            databaseVerifier.captureInitialState();
+            await()
+                    .pollDelay(3, SECONDS)
+                    .untilAsserted(() -> assertThat(true).isTrue());
+            databaseVerifier.verifyDatabaseIntegrity();
         }
     }
 
@@ -241,7 +296,6 @@ class SchedulerApplicationTest {
                     assertThat(contents).hasSize(3);
                 });
     }
-
 
     // Helper Methods
     private void verifyStageCompletion(User user, Content content, int expectedStage) {
@@ -309,14 +363,14 @@ class SchedulerApplicationTest {
     }
 
     private void cleanupDatabases() {
+        userLabelRepository.deleteAll();
+        contentLabelRepository.deleteAll();
+        labelRepository.deleteAll();
         courseContentRepository.deleteAll();
         userCourseRepository.deleteAll();
         contentRepository.deleteAll();
         courseRepository.deleteAll();
         userRepository.deleteAll();
-        userLabelRepository.deleteAll();
-        contentLabelRepository.deleteAll();
-        labelRepository.deleteAll();
     }
 
 

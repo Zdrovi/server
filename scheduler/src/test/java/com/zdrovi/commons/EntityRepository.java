@@ -8,6 +8,9 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static com.google.common.primitives.Shorts.max;
+import static com.google.common.primitives.Shorts.min;
+
 
 @Component
 @RequiredArgsConstructor
@@ -115,10 +118,35 @@ public class EntityRepository {
         return user;
     }
 
+    public Label createLabel(String name) {
+        var l = new Label();
+        l.setName(name);
+        return labelRepository.save(l);
+    }
+
+    @SuppressWarnings("UnusedReturnValue")
+    public UserLabel createUserLabel(User user, Label label) {
+        var userLabel =  new UserLabel();
+        userLabel.setUser(user);
+        userLabel.setLabel(label);
+        userLabel.setMatching((short) 50);
+        return userLabelRepository.save(userLabel);
+    }
+
+    @SuppressWarnings("UnusedReturnValue")
+    public ContentLabel createContentLabel(Content content, Label label, short matching) {
+        var contentLabel = new ContentLabel();
+        contentLabel.setContent(content);
+        contentLabel.setLabel(label);
+        contentLabel.setMatching(matching);
+        return contentLabelRepository.save(contentLabel);
+    }
+
     public User setupUserWithLabelAndContent(String title,
                                              String name,
                                              String email,
-                                             String rawContent) {
+                                             String rawContent,
+                                             short max_matching) {
 
         User user = createBasicUser(name, email);
 
@@ -129,26 +157,24 @@ public class EntityRepository {
         List.of("sleep", "stress", "food", "health", "stimulants")
                 .forEach(label_name ->
             {
-                var l = new Label();
-                l.setName(label_name);
-                labelRepository.save(l);
+                var label = createLabel(label_name);
 
-                var userLabel = new UserLabel();
-                userLabel.setUser(user);
-                userLabel.setLabel(l);
-                userLabel.setMatching((short) 50);
-                userLabelRepository.save(userLabel);
+                createUserLabel(user, label);
 
                 for (int i = 0; i < contents.size(); i++)
                 {
                     var content = contents.get(i);
-                    var contentLabel = new ContentLabel();
-                    contentLabel.setContent(content);
-                    contentLabel.setLabel(l);
-                    contentLabel.setMatching((short) (100 - 10 * i));
-                    contentLabelRepository.save(contentLabel);
+                    short matching = min(max_matching, (short) (100 - 10 * i));
+                    createContentLabel(content, label, matching);
                 }
             });
         return user;
+    }
+
+    @SuppressWarnings("UnusedReturnValue")
+    public Course setupActiveCourseForUser(User user) {
+        Course course = createCourse(1);
+        createUserCourse(user, course, 0);
+        return course;
     }
 }

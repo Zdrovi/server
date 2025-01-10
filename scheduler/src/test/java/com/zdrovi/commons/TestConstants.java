@@ -9,4 +9,6 @@ public interface TestConstants {
     String GREETING = "Cześć";
     String SIGNATURE = "Pozdrawiamy";
     String UNSUBSCRIBE_BASE_URL = "https://zdrovi.com/wypisz-sie";
+    short MAX_MATCHING_VALUES = 100;
+    short ZEROED_MATCHING_VALUES = 0;
 }
