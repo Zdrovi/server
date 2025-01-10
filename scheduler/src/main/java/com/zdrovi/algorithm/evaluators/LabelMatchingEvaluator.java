@@ -1,5 +1,6 @@
 package com.zdrovi.algorithm.evaluators;
 
+import com.google.common.collect.Comparators;
 import com.zdrovi.algorithm.config.AlgorithmConfig;
 import com.zdrovi.algorithm.dto.ContentScore;
 import com.zdrovi.domain.entity.Content;
@@ -15,6 +16,7 @@ import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,9 +35,15 @@ public class LabelMatchingEvaluator implements Evaluator {
 
     private final float dotProductScaler = 1 / 10000.0f;
 
-    // Assume that lists are sorted
-    private List<Pair<UserLabel, ContentLabel>> findMatchingEntities(List<UserLabel> userLabels, List<ContentLabel> contentLabels) {
-        var matches = new ArrayList<Pair<UserLabel, ContentLabel>>();
+    private List<Pair<UserLabel, ContentLabel>> findMatchingEntities(final User user, final Content content) {
+
+        List<UserLabel> userLabels = userLabelRepository.findAllByUser(user);
+        List<ContentLabel> contentLabels = contentLabelRepository.findAllByContent(content);
+
+        userLabels.sort(Comparator.comparing(userLabel -> userLabel.getLabel().getId()));
+        contentLabels.sort(Comparator.comparing(contentLabel -> contentLabel.getLabel().getId()));
+
+        ArrayList<Pair<UserLabel, ContentLabel>> matches = new ArrayList<>();
 
         int userIndex = 0;
         int contentIndex = 0;
@@ -66,12 +74,7 @@ public class LabelMatchingEvaluator implements Evaluator {
 
     private Float calculateMatching(final User user, final Content content)
     {
-
-        Sort sort = Sort.by(ASC, "label.id");
-        List<UserLabel> userLabels = userLabelRepository.findAllByUser(user, sort);
-        List<ContentLabel> contentLabels = contentLabelRepository.findAllByContent(content, sort);
-
-        List<Pair<UserLabel, ContentLabel>> matchingEntities = findMatchingEntities(userLabels, contentLabels);
+        List<Pair<UserLabel, ContentLabel>> matchingEntities = findMatchingEntities(user, content);
 
         return matchingEntities
                 .stream()

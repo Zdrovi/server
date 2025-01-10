@@ -9,5 +9,5 @@ import java.util.List;
 import java.util.UUID;
 
 public interface UserLabelRepository extends JpaRepository<UserLabel, UUID> {
-    List<UserLabel> findAllByUser(User user, Sort sort);
+    List<UserLabel> findAllByUser(User user);
 }
