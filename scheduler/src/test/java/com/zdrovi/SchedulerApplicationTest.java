@@ -12,10 +12,7 @@ import com.zdrovi.domain.repository.*;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.SneakyThrows;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -79,6 +76,7 @@ class SchedulerApplicationTest {
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
     }
+
     @BeforeAll
     static void beforeAll() {
         greenMail = new GreenMail(new ServerSetup(3025, null, "smtp"))
@@ -98,119 +96,126 @@ class SchedulerApplicationTest {
         greenMail.stop();
     }
 
-    @Test
-    void shouldSendEmailAndIncrementStageForUserWithUnfinishedCourse() {
-        // Given
-        User user = entityRepository.setupUserWithCourseAndContent(
-                TITLE,
-                NAME,
-                EMAIL,
-                CONTENT
-        );
-        UserCourse userCourse = user.getUserCourses().iterator().next();
-        Content content = userCourse.getCourse().getCourseContents().iterator().next().getContent();
+    @Nested
+    class WhenTestingSendingMails {
 
-        databaseVerifier.captureInitialState();
+        @Test
+        void shouldSendEmailAndIncrementStageForUserWithUnfinishedCourse() {
+            // Given
+            User user = entityRepository.setupUserWithCourseAndContent(
+                    TITLE,
+                    NAME,
+                    EMAIL,
+                    CONTENT
+            );
+            UserCourse userCourse = user.getUserCourses().iterator().next();
+            Content content = userCourse.getCourse().getCourseContents().iterator().next().getContent();
 
-        // When/Then
-        await()
-                .atMost(AWAIT_TIMEOUT, SECONDS)
-                .untilAsserted(() -> {
-                    MimeMessage message = assertEmailReceived();
-                    assertEmailContent(message, user, content);
-                    assertStageIncremented(userCourse.getId(), 2);
-                });
+            databaseVerifier.captureInitialState();
 
-        databaseVerifier.verifyDatabaseIntegrity();
+            // When/Then
+            await()
+                    .atMost(AWAIT_TIMEOUT, SECONDS)
+                    .untilAsserted(() -> {
+                        MimeMessage message = assertEmailReceived();
+                        assertEmailContent(message, user, content);
+                        assertStageIncremented(userCourse.getId(), 2);
+                    });
+
+            databaseVerifier.verifyDatabaseIntegrity();
+        }
+
+        @Test
+        @SneakyThrows
+        void shouldCompleteEntireCoursePathForUser() {
+            // Given
+            TestCourseSetup courseSetup = entityRepository.setupCompleteCoursePath(NAME, EMAIL);
+            databaseVerifier.captureInitialState();
+
+            verifyStageCompletion(courseSetup.user(), courseSetup.content1(), 1);
+
+            greenMail.reset();
+            verifyStageCompletion(courseSetup.user(), courseSetup.content2(), 2);
+
+            greenMail.reset();
+            verifyNoMoreEmails();
+
+            databaseVerifier.verifyDatabaseIntegrity();
+        }
+
+        @Test
+        void shouldHandleNoCoursesForUser() {
+            // Given
+            entityRepository.createBasicUser(NAME, EMAIL);
+            databaseVerifier.captureInitialState();
+
+            // When/Then
+            await()
+                    .atMost(AWAIT_TIMEOUT, SECONDS)
+                    .untilAsserted(() -> {
+                        assertThat(greenMail.getReceivedMessages()).isEmpty();
+                        assertThat(userCourseRepository.findAll()).isEmpty();
+                    });
+
+            databaseVerifier.verifyDatabaseIntegrity();
+        }
+
+        @Test
+        void shouldHandleEmailAuthenticationFailure() {
+            // Given
+            greenMail.stop();
+            User user = entityRepository.setupUserWithCourseAndContent(
+                    TITLE,
+                    NAME,
+                    EMAIL,
+                    CONTENT
+            );
+            UUID userCourseId = user.getUserCourses().iterator().next().getId();
+            databaseVerifier.captureInitialState();
+
+            // When/Then
+            verifyStageUnchanged(userCourseId, 1);
+
+            greenMail.start();
+
+            databaseVerifier.verifyDatabaseIntegrity();
+        }
+
+        @Test
+        void shouldHandleEmailNetworkIssue() {
+            // Given
+            greenMail.stop();
+            User user = entityRepository.setupUserWithCourseAndContent(
+                    TITLE,
+                    NAME,
+                    EMAIL,
+                    CONTENT
+            );
+            UUID userCourseId = user.getUserCourses().iterator().next().getId();
+            databaseVerifier.captureInitialState();
+
+            // When/Then
+            verifyStageUnchanged(userCourseId, 1);
+
+            databaseVerifier.verifyDatabaseIntegrity();
+        }
     }
 
-    @Test
-    @SneakyThrows
-    void shouldCompleteEntireCoursePathForUser() {
-        // Given
-        TestCourseSetup courseSetup = entityRepository.setupCompleteCoursePath(NAME, EMAIL);
-        databaseVerifier.captureInitialState();
+    @Nested
+    class WhenTestingEvaluators {
+        @Test
+        void shouldCreateCourseForUser() {
+            User user = entityRepository.setupUserWithLabelAndContent(
+                    TITLE,
+                    NAME,
+                    EMAIL,
+                    CONTENT
+            );
 
-        verifyStageCompletion(courseSetup.user(), courseSetup.content1(), 1);
+            databaseVerifier.captureInitialState();
 
-        greenMail.reset();
-        verifyStageCompletion(courseSetup.user(), courseSetup.content2(), 2);
-
-        greenMail.reset();
-        verifyNoMoreEmails();
-
-        databaseVerifier.verifyDatabaseIntegrity();
-    }
-
-    @Test
-    void shouldHandleNoCoursesForUser() {
-        // Given
-        entityRepository.createBasicUser(NAME, EMAIL);
-        databaseVerifier.captureInitialState();
-
-        // When/Then
-        await()
-                .atMost(AWAIT_TIMEOUT, SECONDS)
-                .untilAsserted(() -> {
-                    assertThat(greenMail.getReceivedMessages()).isEmpty();
-                    assertThat(userCourseRepository.findAll()).isEmpty();
-                });
-
-        databaseVerifier.verifyDatabaseIntegrity();
-    }
-
-    @Test
-    void shouldHandleEmailAuthenticationFailure() {
-        // Given
-        greenMail.stop();
-        User user = entityRepository.setupUserWithCourseAndContent(
-                TITLE,
-                NAME,
-                EMAIL,
-                CONTENT
-        );
-        UUID userCourseId = user.getUserCourses().iterator().next().getId();
-        databaseVerifier.captureInitialState();
-
-        // When/Then
-        verifyStageUnchanged(userCourseId, 1);
-
-        greenMail.start();
-
-        databaseVerifier.verifyDatabaseIntegrity();
-    }
-
-    @Test
-    void shouldHandleEmailNetworkIssue() {
-        // Given
-        greenMail.stop();
-        User user = entityRepository.setupUserWithCourseAndContent(
-                TITLE,
-                NAME,
-                EMAIL,
-                CONTENT
-        );
-        UUID userCourseId = user.getUserCourses().iterator().next().getId();
-        databaseVerifier.captureInitialState();
-
-        // When/Then
-        verifyStageUnchanged(userCourseId, 1);
-
-        databaseVerifier.verifyDatabaseIntegrity();
-    }
-
-    @Test
-    void shouldCreateCourseForUser() {
-        User user = entityRepository.setupUserWithLabelAndContent(
-                TITLE,
-                NAME,
-                EMAIL,
-                CONTENT
-        );
-
-        databaseVerifier.captureInitialState();
-
-        verifyCourseCreated(user.getId());
+            verifyCourseCreated(user.getId());
+        }
     }
 
     private void verifyCourseCreated(UUID user_id) {
