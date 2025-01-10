@@ -31,7 +31,8 @@ public class EmailScheduler {
             log.error("Error sending email for user: {}, with error: {}, root cause: {}",
                     user.getId(),
                     e.getMessage(),
-                    Throwables.getRootCause(e).getMessage());
+                    Throwables.getRootCause(e).getMessage(),
+                    e);
         }
     }
 

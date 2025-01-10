@@ -27,7 +27,7 @@ public class CourseRepositoryHelper {
         return userCourseRepository.findTopUnfinishedCourseByUserId(user.getId()).isPresent();
     }
 
-    public void save(User user, List<Content> contents) {
+    public void createCourseForUser(User user, List<Content> contents) {
         Course course = createCourseForUser(contents);
         createCourseContents(contents, course);
         createUserCourse(user, course);

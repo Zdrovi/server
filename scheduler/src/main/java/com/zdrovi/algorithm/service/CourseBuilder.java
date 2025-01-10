@@ -7,6 +7,7 @@ import com.zdrovi.algorithm.evaluators.LabelMatchingEvaluator;
 import com.zdrovi.algorithm.evaluators.RemoveSeenEvaluator;
 import com.zdrovi.domain.entity.User;
 import com.zdrovi.domain.repository.ContentRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -15,6 +16,7 @@ import java.util.List;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class CourseBuilder {
 
     final private ContentRepository contentRepository;
@@ -24,21 +26,6 @@ public class CourseBuilder {
     final private AlgorithmConfig config;
 
     final private List<Evaluator> evaluators;
-
-    public CourseBuilder(ContentRepository contentRepository,
-                  CourseRepositoryHelper courseRepositoryHelper,
-                  AlgorithmConfig config,
-                  RemoveSeenEvaluator removeSeen,
-                  LabelMatchingEvaluator labelMatching)
-    {
-        this.contentRepository = contentRepository;
-        this.courseRepositoryHelper = courseRepositoryHelper;
-        this.config = config;
-
-        evaluators = new ArrayList<>();
-        evaluators.add(removeSeen);
-        evaluators.add(labelMatching);
-    }
 
     public void prepareCourse(final User user)
     {
@@ -69,6 +56,6 @@ public class CourseBuilder {
             return;
         }
 
-        courseRepositoryHelper.save(user,course_content);
+        courseRepositoryHelper.createCourseForUser(user,course_content);
     }
 }
