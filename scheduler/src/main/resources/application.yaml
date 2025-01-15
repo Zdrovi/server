@@ -3,9 +3,9 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://xevix.tplinkdns.com:5432/zdrovi
-    username: postgres
-    password: 5f2Sm![2?CSb#quG
+    url: jdbc:postgresql://${ENV_DB_HOST}:5432/${ENV_DB_NAME}
+    username: ${ENV_DB_USER}
+    password: ${ENV_DB_PASSWORD}
   jpa:
     properties:
       hibernate:
@@ -16,20 +16,19 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: info.zdrovi@gmail.com
-    password: 'aajd bbkv ckjh fonb'
+    username: ${ENV_MAIL_USER}
+    password: ${ENV_MAIL_PASSWORD}
     properties:
       mail:
         smtp:
           auth: true
           starttls:
             enable: true
-
-
+            
 email:
   send:
     period: '0 */1 * * * *'
-    from: info.zdrovi@gmail.com
+    from: ${ENV_MAIL_USER}
 
 algorithm:
   label_matching_min: 1.0
