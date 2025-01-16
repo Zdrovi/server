@@ -30,7 +30,7 @@ email:
     period: '0 */1 * * * *'
     from: ${ENV_MAIL_USER}
 
-user:
+form:
   google-application-name: zdrovi-dev
   google-credentials-file: zdrovi-368272ced627.json
   google-form-id: ${ENV_GOOGLE_FORM_ID}

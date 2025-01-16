@@ -1,4 +1,4 @@
-package com.zdrovi.user.config;
+package com.zdrovi.form.config;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -6,8 +6,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @RequiredArgsConstructor
 @Data
-@ConfigurationProperties("user")
-public class UserConfig {
+@ConfigurationProperties("form")
+public class FormConfig {
     private String googleApplicationName;
     private String googleCredentialsFile;
     private String googleFormId;

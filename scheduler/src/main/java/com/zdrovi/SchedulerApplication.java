@@ -1,7 +1,7 @@
 package com.zdrovi;
 
 import com.zdrovi.email.config.EmailConfig;
-import com.zdrovi.user.config.UserConfig;
+import com.zdrovi.form.config.FormConfig;
 import lombok.SneakyThrows;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -14,7 +14,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableJpaRepositories
 @EnableConfigurationProperties({
         EmailConfig.class,
-        UserConfig.class
+        FormConfig.class
 })
 public class SchedulerApplication {
 
