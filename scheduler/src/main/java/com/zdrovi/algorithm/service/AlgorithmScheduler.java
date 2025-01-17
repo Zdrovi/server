@@ -1,4 +1,4 @@
-package com.zdrovi.email.service;
+package com.zdrovi.algorithm.service;
 
 import com.google.common.base.Throwables;
 import com.zdrovi.domain.entity.User;
@@ -11,30 +11,31 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class EmailScheduler {
+public class AlgorithmScheduler {
 
     private final UserRepository userRepository;
 
-    private final ContentSender contentSender;
+    private final CourseBuilder courseBuilder;
 
-    @Scheduled(cron = "${email.send.period}")
+    @Scheduled(cron = "${algorithm.period}")
     void process() {
+        log.info("Algorithm scheduler started");
         userRepository
-                .findAll()
-                .forEach(this::trySendContent);
+                .findAllWithoutPendingCourse()
+                .forEach(this::createCourse);
     }
 
-    private void trySendContent(final User user) {
+    private void createCourse(User user) {
+        log.debug("Creating course for {}", user.getId());
         try {
-            contentSender.findAndSendNewestContent(user);
+            courseBuilder.prepareCourse(user);
         } catch (final Exception e) {
-            log.error("Error sending email for user: {}, with error: {}, root cause: {}",
+            log.error("Error preparing course for user: {}, with error: {}, root cause: {}",
                     user.getId(),
                     e.getMessage(),
                     Throwables.getRootCause(e).getMessage(),
                     e);
         }
     }
-
 
 }

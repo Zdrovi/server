@@ -22,7 +22,7 @@ public class ContentLabel {
     @JoinColumn(name = "content_id", nullable = false)
     private Content content;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "label_id", nullable = false)
     private Label label;
 
