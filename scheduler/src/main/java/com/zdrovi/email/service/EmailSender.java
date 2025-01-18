@@ -21,6 +21,7 @@ public class EmailSender {
     private final JavaMailSender javaMailSender;
     private final EmailConfig emailConfig;
     private final String html;
+    private final String welcome_html;
 
     @SneakyThrows
     public EmailSender(JavaMailSender javaMailSender, EmailConfig emailConfig) {
@@ -28,6 +29,9 @@ public class EmailSender {
         this.emailConfig = emailConfig;
         html = new String(Objects.requireNonNull(this.getClass().getClassLoader()
                         .getResourceAsStream("email.html"))
+                .readAllBytes(), UTF_8);
+        welcome_html = new String(Objects.requireNonNull(this.getClass().getClassLoader()
+                        .getResourceAsStream("welcome_email.html"))
                 .readAllBytes(), UTF_8);
     }
 
@@ -47,6 +51,25 @@ public class EmailSender {
                     .unsubscribeUrl("https://zdrovi.com/wypisz-sie")
                     .build()), true);
             log.debug("Sending email with content {}", helper);
+        });
+    }
+
+    @SneakyThrows
+    public void sendWelcomeMailToUser(final User user) {
+        log.info("Sending welcome email to user: {}", user.getName());
+        javaMailSender.send(mimeMessage -> {
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, UTF_8.name());
+            helper.setFrom(emailConfig.getFrom());
+            helper.setTo(user.getEmail());
+            helper.setSubject("Welcome to Zdrovi");
+            helper.setText(PlaceholderReplacer.replace(welcome_html, PlaceholderReplacer.HtmlTemplateValues.builder()
+                    .header("Zdrovi")
+                    .greeting(new String("Cześć".getBytes(), UTF_8)  )// Polish greeting
+                    .content("Zapisałeś się do programu Zdrovi.")
+                    .signature("Pozdrawiamy")  // Polish signature
+                    .unsubscribeUrl("https://zdrovi.com/wypisz-sie")
+                    .build()), true);
+            log.debug("Sending welcome email with content {}", helper);
         });
     }
 }

@@ -10,5 +10,5 @@ import java.util.Map;
 public class DecodedResponse {
     private String name;
     private String email;
-    private Map<String, Short> label_matching;
+    private Map<String, Short> labelMatching;
 }
