@@ -8,6 +8,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Data
 @ConfigurationProperties("form")
 public class FormConfig {
+    private String decoderVersion;
     private String googleApplicationName;
     private String googleCredentialsFile;
     private String googleFormId;

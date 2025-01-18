@@ -3,6 +3,7 @@ package com.zdrovi.form.google;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.forms.v1.Forms;
+import com.google.api.services.forms.v1.Forms.FormsOperations.Responses;
 import com.google.api.services.forms.v1.model.*;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -22,8 +24,6 @@ import java.util.Optional;
 public class GoogleFormsService implements FormService {
     private final GoogleCredentialService googleCredentialService;
     private final FormConfig formConfig;
-
-    private String lastUpdate = "2000-01-01T12:00:00Z";
 
     public Forms getFormsService() throws IOException {
         GoogleCredentials credential = googleCredentialService.getCredential();
@@ -38,16 +38,27 @@ public class GoogleFormsService implements FormService {
 
     @Override
     public List<List<String>> getAnswers() {
+        return getAnswers(Optional.empty());
+    }
+
+    @Override
+    public List<List<String>> getAnswers(ZonedDateTime from) {
+        return getAnswers(Optional.of(from));
+    }
+
+    public List<List<String>> getAnswers(Optional<ZonedDateTime> from) {
         try {
             Forms formsService = getFormsService();
             Form form = formsService.forms().get(formConfig.getGoogleFormId()).execute();
-            ListFormResponsesResponse responses =  formsService
+            Responses.List response_list = formsService
                     .forms()
                     .responses()
-                    .list(formConfig.getGoogleFormId())
-                    .setFilter("timestamp >= " + lastUpdate)
-                    .execute();
-            lastUpdate = Instant.now().toString();
+                    .list(formConfig.getGoogleFormId());
+            if (from.isPresent()) {
+                String timestampRFC3339 = from.get().toInstant().toString();
+                response_list = response_list.setFilter("timestamp >= " + timestampRFC3339);
+            }
+            ListFormResponsesResponse responses = response_list.execute();
             return responses.getResponses().stream().map(response -> extract_answers(form, response)).toList();
         } catch (IOException e) {
             return List.of();
