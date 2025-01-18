@@ -10,6 +10,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.zdrovi.form.FormService;
 import com.zdrovi.form.config.FormConfig;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -21,11 +22,13 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class GoogleFormsService implements FormService {
     private final GoogleCredentialService googleCredentialService;
     private final FormConfig formConfig;
 
     public Forms getFormsService() throws IOException {
+        log.debug("Asking for forms service");
         GoogleCredentials credential = googleCredentialService.getCredential();
         return new Forms.Builder(
                 new NetHttpTransport(),
@@ -56,6 +59,7 @@ public class GoogleFormsService implements FormService {
                     .list(formConfig.getGoogleFormId());
             if (from.isPresent()) {
                 String timestampRFC3339 = from.get().toInstant().toString();
+                log.debug("Looking up for answers from {}", timestampRFC3339);
                 response_list = response_list.setFilter("timestamp >= " + timestampRFC3339);
             }
             ListFormResponsesResponse responses = response_list.execute();

@@ -13,6 +13,7 @@ import com.zdrovi.form.decoder.DecoderFactory;
 import com.zdrovi.form.dto.DecodedResponse;
 import com.zdrovi.form.google.GoogleFormsService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +24,7 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ResponseProcessor {
     private final FormConfig config;
     private final GoogleFormsService googleFormsService;
@@ -38,10 +40,12 @@ public class ResponseProcessor {
 
     @Transactional
     public void processResponses() {
+        log.info("Processing responses");
         Decoder decoder = decoderFactory.getDecoder();
         ZonedDateTime now = ZonedDateTime.now();
         List<List<String>> raw_answers = googleFormsService.getAnswers(now);
         lastUpdate = now;
+        log.info("Got {} answers", raw_answers.size());
         List<DecodedResponse> answers = raw_answers
                 .stream()
                 .map(decoder::decode)
@@ -50,6 +54,7 @@ public class ResponseProcessor {
                         .findUserByEmail(decodedResponse.getEmail())
                         .isEmpty())
                 .toList();
+        log.info("New answers: {}", answers.size());
         addToDatabase(answers);
     }
 
@@ -62,6 +67,7 @@ public class ResponseProcessor {
     }
 
     private void addMatchings(User user, DecodedResponse decodedResponse) {
+
         for (Map.Entry<String, Short> entry : decodedResponse.getLabelMatching().entrySet())
         {
             String labelName = entry.getKey();
@@ -75,6 +81,7 @@ public class ResponseProcessor {
             }
 
             if (label_opt.isEmpty()) {
+                log.warn("Label {} not found", labelName);
                 continue;
             }
 
@@ -84,6 +91,7 @@ public class ResponseProcessor {
     }
 
     private User createUser(DecodedResponse decodedResponse) {
+        log.info("Creating user: {}", decodedResponse.getEmail());
         User user = new User();
         user.setName(decodedResponse.getName());
         user.setEmail(decodedResponse.getEmail());
@@ -91,6 +99,7 @@ public class ResponseProcessor {
     }
 
     private Label createLabel(String labelName) {
+        log.info("Creating label: {}", labelName);
         Label label = new Label();
         label.setName(labelName);
         return labelRepository.save(label);
@@ -98,6 +107,7 @@ public class ResponseProcessor {
 
     @SuppressWarnings("UnusedReturnValue")
     private UserLabel createUserLabel(User user, Label label, Short matching) {
+        log.info("Creating matching: user: {}, label: {}, matching: {}", user.getName(), label.getName(), matching);
         UserLabel userLabel = new UserLabel();
         userLabel.setLabel(label);
         userLabel.setUser(user);

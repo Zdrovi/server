@@ -3,6 +3,7 @@ package com.zdrovi.form.google;
 import com.google.api.services.forms.v1.FormsScopes;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.zdrovi.form.config.FormConfig;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Service
+@Slf4j
 public class GoogleCredentialService {
     final private GoogleCredentials credential;
 
@@ -26,6 +28,7 @@ public class GoogleCredentialService {
     }
 
     GoogleCredentials getCredential() throws IOException {
+        log.debug("Asking for Google credentials");
         credential.refreshIfExpired();
         return credential;
     }

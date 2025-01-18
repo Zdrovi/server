@@ -2,6 +2,7 @@ package com.zdrovi.form.decoder;
 
 import com.zdrovi.form.dto.DecodedResponse;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -11,13 +12,16 @@ import java.util.Optional;
 
 @Component
 @NoArgsConstructor
+@Slf4j
 public class Decoder_V1 implements Decoder {
 
     static final private Float matchingScaler = 10f;
 
     @Override
     public Optional<DecodedResponse> decode(List<String> responses) {
+        log.debug("Decoding responses: {}", responses);
         if (responses.size() != 10) {
+            log.debug("Invalid number of responses: {}", responses.size());
             return Optional.empty();
         }
         Map<String, Short> label_matching = new HashMap<>();
@@ -34,7 +38,9 @@ public class Decoder_V1 implements Decoder {
         label_matching.put("food_anorexia", scaleMatching(responses.get(8)));
         label_matching.put("food_stimulants", scaleMatching(responses.get(9)));
 
-        return Optional.of(new DecodedResponse(name, email, label_matching));
+        DecodedResponse decodedResponses = new DecodedResponse(name, email, label_matching);
+        log.debug("Decoded responses: {}", decodedResponses);
+        return Optional.of(decodedResponses);
     }
 
     static private short scaleMatching(String m) {
