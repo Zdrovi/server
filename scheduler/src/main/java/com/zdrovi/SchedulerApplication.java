@@ -1,5 +1,6 @@
 package com.zdrovi;
 
+import com.zdrovi.algorithm.config.AlgorithmConfig;
 import com.zdrovi.email.config.EmailConfig;
 import com.zdrovi.form.config.FormConfig;
 import lombok.SneakyThrows;
@@ -13,6 +14,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 @EnableJpaRepositories
 @EnableConfigurationProperties({
+        AlgorithmConfig.class,
         EmailConfig.class,
         FormConfig.class
 })

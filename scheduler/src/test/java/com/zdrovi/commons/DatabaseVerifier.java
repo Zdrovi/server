@@ -15,13 +15,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 @RequiredArgsConstructor
 public class DatabaseVerifier {
 
+    public enum Repositories
+    {
+        User, Course, Content, UserCourse, ContentCourse
+    }
+
     private final UserRepository userRepository;
     private final CourseRepository courseRepository;
     private final ContentRepository contentRepository;
     private final UserCourseRepository userCourseRepository;
     private final CourseContentRepository courseContentRepository;
 
-    private Map<String, Long> initialCounts;
+    private Map<Repositories, Long> initialCounts;
     private Set<UUID> initialUserIds;
     private Set<UUID> initialCourseIds;
     private Set<UUID> initialContentIds;
@@ -38,29 +43,53 @@ public class DatabaseVerifier {
     }
 
     @Transactional
-    public void verifyDatabaseIntegrity() {
+    public void verifyDatabaseIntegrity()
+    {
+        verifyDatabaseIntegrity(Arrays.stream(Repositories.values()).toList());
+    }
+
+    @Transactional
+    public void verifyDatabaseIntegrity(List<Repositories> included) {
         // Verify counts
-        Map<String, Long> currentCounts = captureTableCounts();
-        assertThat(currentCounts).isEqualTo(initialCounts);
+        Map<Repositories, Long> currentCounts = captureTableCounts();
+
+        for (Map.Entry<Repositories, Long> entry : currentCounts.entrySet()) {
+            Repositories repositories = entry.getKey();
+            Long count = entry.getValue();
+            if (included.contains(repositories)) {
+                assertThat(initialCounts.containsKey(repositories)).isTrue();
+                assertThat(initialCounts.get(repositories)).isEqualTo(count);
+            }
+        }
 
         // Verify no entities were removed
-        assertThat(captureIds(userRepository.findAll())).containsAll(initialUserIds);
-        assertThat(captureIds(courseRepository.findAll())).containsAll(initialCourseIds);
-        assertThat(captureIds(contentRepository.findAll())).containsAll(initialContentIds);
-        assertThat(captureIds(userCourseRepository.findAll())).containsAll(initialUserCourseIds);
-        assertThat(captureIds(courseContentRepository.findAll())).containsAll(initialCourseContentIds);
+        if (included.contains(Repositories.User)) {
+            assertThat(captureIds(userRepository.findAll())).containsAll(initialUserIds);
+        }
+        if (included.contains(Repositories.Course)) {
+            assertThat(captureIds(courseRepository.findAll())).containsAll(initialCourseIds);
+        }
+        if (included.contains(Repositories.Content)) {
+            assertThat(captureIds(contentRepository.findAll())).containsAll(initialContentIds);
+        }
+        if (included.contains(Repositories.UserCourse)) {
+            assertThat(captureIds(userCourseRepository.findAll())).containsAll(initialUserCourseIds);
+        }
+        if (included.contains(Repositories.ContentCourse)) {
+            assertThat(captureIds(courseContentRepository.findAll())).containsAll(initialCourseContentIds);
+        }
 
         // Verify relationships
         verifyRelationships();
     }
 
-    private Map<String, Long> captureTableCounts() {
-        Map<String, Long> counts = new HashMap<>();
-        counts.put("users", userRepository.count());
-        counts.put("courses", courseRepository.count());
-        counts.put("contents", contentRepository.count());
-        counts.put("userCourses", userCourseRepository.count());
-        counts.put("courseContents", courseContentRepository.count());
+    private Map<Repositories, Long> captureTableCounts() {
+        Map<Repositories, Long> counts = new HashMap<>();
+        counts.put(Repositories.User, userRepository.count());
+        counts.put(Repositories.Course, courseRepository.count());
+        counts.put(Repositories.Content, contentRepository.count());
+        counts.put(Repositories.UserCourse, userCourseRepository.count());
+        counts.put(Repositories.ContentCourse, courseContentRepository.count());
         return counts;
     }
 

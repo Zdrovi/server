@@ -24,6 +24,11 @@ spring:
           auth: true
           starttls:
             enable: true
+       
+algorithm:
+  label_matching_min: 1.0
+  course_length: 5
+  period: '0 0 * * * *'
 
 email:
   send:

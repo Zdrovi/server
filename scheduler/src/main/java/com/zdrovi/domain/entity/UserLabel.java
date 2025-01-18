@@ -22,7 +22,7 @@ public class UserLabel {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "label_id", nullable = false)
     private Label label;
 
