@@ -43,7 +43,7 @@ public class ResponseProcessor {
         log.info("Processing responses");
         Decoder decoder = decoderFactory.getDecoder();
         ZonedDateTime now = ZonedDateTime.now();
-        List<List<String>> raw_answers = googleFormsService.getAnswers(now);
+        List<List<String>> raw_answers = googleFormsService.getAnswers(lastUpdate);
         lastUpdate = now;
         log.info("Got {} answers", raw_answers.size());
         List<DecodedResponse> answers = raw_answers
