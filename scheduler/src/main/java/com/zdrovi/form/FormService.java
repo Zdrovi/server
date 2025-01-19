@@ -5,7 +5,5 @@ import java.util.List;
 
 public interface FormService {
 
-    public List<List<String>> getAnswers();
-
-    public List<List<String>> getAnswers(ZonedDateTime from);
+    List<List<String>> getAnswers(ZonedDateTime from);
 }

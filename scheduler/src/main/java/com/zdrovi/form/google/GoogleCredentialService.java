@@ -1,6 +1,5 @@
 package com.zdrovi.form.google;
 
-import com.google.api.services.forms.v1.FormsScopes;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.zdrovi.form.config.FormConfig;
 import lombok.extern.slf4j.Slf4j;
@@ -11,24 +10,28 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Objects;
 
+import static com.google.api.services.forms.v1.FormsScopes.FORMS_BODY_READONLY;
+import static com.google.api.services.forms.v1.FormsScopes.FORMS_RESPONSES_READONLY;
+
 @Service
 @Slf4j
 public class GoogleCredentialService {
+
     final private GoogleCredentials credential;
 
-    GoogleCredentialService(FormConfig formConfig) throws IOException {
+    public GoogleCredentialService(final FormConfig formConfig) throws IOException {
         InputStream credentialsStream = this.getClass().
                 getClassLoader().
                 getResourceAsStream(formConfig.getGoogleCredentialsFile());
 
         this.credential = GoogleCredentials
                 .fromStream(Objects.requireNonNull(credentialsStream))
-                .createScoped(List.of(FormsScopes.FORMS_BODY_READONLY,FormsScopes.FORMS_RESPONSES_READONLY));
+                .createScoped(List.of(FORMS_BODY_READONLY, FORMS_RESPONSES_READONLY));
 
     }
 
-    GoogleCredentials getCredential() throws IOException {
-        log.debug("Asking for Google credentials");
+    public GoogleCredentials getCredential() throws IOException {
+        log.info("Asking for Google credentials");
         credential.refreshIfExpired();
         return credential;
     }

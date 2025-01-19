@@ -19,7 +19,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 
 @Service
@@ -35,18 +37,17 @@ public class ResponseProcessor {
     private final LabelRepository labelRepository;
     private final UserLabelRepository userLabelRepository;
 
-    private ZonedDateTime lastUpdate = ZonedDateTime.of(2000, 1, 1 ,
-            0 , 0, 0, 0, ZoneId.systemDefault());
+    private final AtomicReference<ZonedDateTime> lastUpdate = new AtomicReference<>(
+            ZonedDateTime.of(2000, 1, 1 , 0 , 0, 0, 0, ZoneId.systemDefault()));
 
     @Transactional
     public void processResponses() {
         log.info("Processing responses");
         Decoder decoder = decoderFactory.getDecoder();
-        ZonedDateTime now = ZonedDateTime.now();
-        List<List<String>> raw_answers = googleFormsService.getAnswers(lastUpdate);
-        lastUpdate = now;
-        log.info("Got {} answers", raw_answers.size());
-        List<DecodedResponse> answers = raw_answers
+        List<List<String>> rawAnswers = googleFormsService.getAnswers(lastUpdate.get());
+        lastUpdate.set(ZonedDateTime.now());
+        log.info("Got {} answers", rawAnswers.size());
+        List<DecodedResponse> answers = rawAnswers
                 .stream()
                 .map(decoder::decode)
                 .flatMap(Optional::stream)
@@ -68,26 +69,23 @@ public class ResponseProcessor {
 
     private void addMatchings(User user, DecodedResponse decodedResponse) {
 
-        for (Map.Entry<String, Short> entry : decodedResponse.getLabelMatching().entrySet())
-        {
-            String labelName = entry.getKey();
-            Short matching = entry.getValue();
-            Optional<Label> label_opt = labelRepository.findFirstByName(labelName);
+        decodedResponse.getLabelMatching().forEach((labelName,matching) -> {
+            Optional<Label> label = labelRepository.findFirstByName(labelName);
 
-            if (label_opt.isEmpty()) {
+            if (label.isEmpty()) {
                 if (config.isCreateLabelIfNotExist()) {
-                    label_opt = Optional.of(createLabel(labelName));
+                    label = Optional.of(createLabel(labelName));
                 }
             }
 
-            if (label_opt.isEmpty()) {
+            if (label.isEmpty()) {
                 log.warn("Label {} not found", labelName);
-                continue;
+                return;
             }
 
-            Label label = label_opt.get();
-            createUserLabel(user, label, matching);
-        }
+            createUserLabel(user, label.get(), matching);
+        });
+
     }
 
     private User createUser(DecodedResponse decodedResponse) {

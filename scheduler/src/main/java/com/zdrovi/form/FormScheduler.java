@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import static java.time.ZonedDateTime.now;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -14,7 +16,7 @@ public class FormScheduler {
 
     @Scheduled(cron = "${form.period}")
     void process() {
-        log.info("Form Scheduler started");
+        log.info("Form Scheduler started at {}", now());
         responseProcessor.processResponses();
     }
 

@@ -5,7 +5,6 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -24,21 +23,20 @@ public class Decoder_V1 implements Decoder {
             log.debug("Invalid number of responses: {}", responses.size());
             return Optional.empty();
         }
-        Map<String, Short> label_matching = new HashMap<>();
 
-        String name = responses.get(0);
-        String email = responses.get(1);
-
-        label_matching.put("sleep_not_enough", scaleMatching(responses.get(2)));
-        label_matching.put("sleep_low_quality", scaleMatching(responses.get(3)));
-        label_matching.put("sleep_frequent_wakeups", scaleMatching(responses.get(4)));
-        label_matching.put("stress_work", scaleMatching(responses.get(5)));
-        label_matching.put("stress_exhaustion", scaleMatching(responses.get(6)));
-        label_matching.put("food_obesity", scaleMatching(responses.get(7)));
-        label_matching.put("food_anorexia", scaleMatching(responses.get(8)));
-        label_matching.put("food_stimulants", scaleMatching(responses.get(9)));
-
-        DecodedResponse decodedResponses = new DecodedResponse(name, email, label_matching);
+        var decodedResponses = new DecodedResponse(
+                responses.get(0),
+                responses.get(1),
+                Map.of(
+                        "sleep_not_enough", scaleMatching(responses.get(2)),
+                        "sleep_low_quality", scaleMatching(responses.get(3)),
+                        "sleep_frequent_wakeups", scaleMatching(responses.get(4)),
+                        "stress_work", scaleMatching(responses.get(5)),
+                        "stress_exhaustion", scaleMatching(responses.get(6)),
+                        "food_obesity", scaleMatching(responses.get(7)),
+                        "food_anorexia", scaleMatching(responses.get(8)),
+                        "food_stimulants", scaleMatching(responses.get(9))
+                ));
         log.debug("Decoded responses: {}", decodedResponses);
         return Optional.of(decodedResponses);
     }
