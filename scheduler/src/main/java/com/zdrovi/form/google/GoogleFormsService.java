@@ -1,18 +1,15 @@
 package com.zdrovi.form.google;
 
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.gson.GsonFactory;
-import com.google.api.services.forms.v1.Forms;
-import com.google.api.services.forms.v1.Forms.FormsOperations.Responses;
-import com.google.api.services.forms.v1.model.*;
-import com.google.auth.http.HttpCredentialsAdapter;
 import com.zdrovi.form.FormService;
+import com.zdrovi.form.client.GoogleFormsClient;
 import com.zdrovi.form.config.FormConfig;
+import com.zdrovi.google.model.Answer;
+import com.zdrovi.google.model.Form;
+import com.zdrovi.google.model.Item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
@@ -23,48 +20,62 @@ import java.util.Optional;
 @Slf4j
 public class GoogleFormsService implements FormService {
 
-    private final GoogleCredentialService googleCredentialService;
+    private final GoogleCredentialsService googleCredentialsService;
+
     private final FormConfig formConfig;
+
+    private final GoogleFormsClient googleFormsClient;
 
     @Override
     public List<List<String>> getAnswers(ZonedDateTime from) {
-        return getAnswers(Optional.of(from));
-    }
-
-    private List<List<String>> getAnswers(Optional<ZonedDateTime> from) {
         try {
-            Forms formsService = getFormsService();
-            Form form = formsService.forms().get(formConfig.getGoogleFormId()).execute();
-            Responses.List responseList = formsService
-                    .forms()
-                    .responses()
-                    .list(formConfig.getGoogleFormId());
-            if (from.isPresent()) {
-                String timestampRFC3339 = from.get().toInstant().toString();
-                log.debug("Looking up for answers from {}", timestampRFC3339);
-                responseList = responseList.setFilter("timestamp >= " + timestampRFC3339);
-            }
-            ListFormResponsesResponse responses = responseList.execute();
-            return responses.getResponses().stream()
+            String timestampRFC3339 = from.toInstant().toString();
+            log.info("Looking up for answers from {}", timestampRFC3339);
+
+            String accessToken = googleCredentialsService.getAccessToken();
+            com.zdrovi.google.model.Form form = googleFormsClient.formsFormsGet(
+                    formConfig.getGoogleFormId(),
+                    null,
+                    accessToken,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+            ).getBody();
+
+            List<com.zdrovi.google.model.FormResponse> responses = googleFormsClient.formsFormsResponsesList(
+                    formConfig.getGoogleFormId(),
+                    null,
+                    accessToken,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    "timestamp >= " + timestampRFC3339,
+                    null,
+                    null
+            ).getBody().getResponses();
+
+            return responses.stream()
                     .map(response -> extractAnswers(form, response))
                     .toList();
-        } catch (IOException e) {
+        } catch (Exception e) {
+            log.error(e.toString());
             return List.of();
         }
     }
 
-    private Forms getFormsService() throws IOException {
-        log.debug("Asking for forms service");
-        return new Forms.Builder(
-                new NetHttpTransport(),
-                GsonFactory.getDefaultInstance(),
-                new HttpCredentialsAdapter(googleCredentialService.getCredential())
-        )
-                .setApplicationName(formConfig.getGoogleApplicationName())
-                .build();
-    }
-
-    private List<String> extractAnswers(Form form, FormResponse response) {
+    private List<String> extractAnswers(Form form, com.zdrovi.google.model.FormResponse response) {
         Map<String, Answer> answers = response.getAnswers();
 
         return form.getItems()

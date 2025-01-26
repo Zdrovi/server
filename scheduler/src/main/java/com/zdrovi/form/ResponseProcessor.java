@@ -15,6 +15,7 @@ import com.zdrovi.form.google.GoogleFormsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZoneId;
@@ -40,7 +41,7 @@ public class ResponseProcessor {
     private final AtomicReference<ZonedDateTime> lastUpdate = new AtomicReference<>(
             ZonedDateTime.of(2000, 1, 1 , 0 , 0, 0, 0, ZoneId.systemDefault()));
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void processResponses() {
         log.info("Processing responses");
         Decoder decoder = decoderFactory.getDecoder();
@@ -56,7 +57,9 @@ public class ResponseProcessor {
                         .isEmpty())
                 .toList();
         log.info("New answers: {}", answers.size());
-        addToDatabase(answers);
+        if (!answers.isEmpty()) {
+            addToDatabase(answers);
+        }
     }
 
     private void addToDatabase(List<DecodedResponse> decodedResponses) {
