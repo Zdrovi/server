@@ -22,8 +22,7 @@ public class CourseRepositoryHelper {
     private final CourseContentRepository courseContentRepository;
     private final UserCourseRepository userCourseRepository;
 
-    public Boolean hasOpenCourse(User user)
-    {
+    public Boolean hasOpenCourse(User user) {
         return userCourseRepository.findTopUnfinishedCourseByUserId(user.getId()).isPresent();
     }
 
@@ -62,8 +61,7 @@ public class CourseRepositoryHelper {
         userCourseRepository.save(userCourse);
     }
 
-    private void flushAll()
-    {
+    private void flushAll() {
         courseRepository.flush();
         courseContentRepository.flush();
         userCourseRepository.flush();

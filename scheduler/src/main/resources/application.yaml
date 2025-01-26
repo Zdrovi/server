@@ -24,13 +24,21 @@ spring:
           auth: true
           starttls:
             enable: true
-            
+       
+algorithm:
+  label_matching_min: 1.0
+  course_length: 5
+  period: '0 0 * * * *'
+
 email:
   send:
     period: '0 */1 * * * *'
     from: ${ENV_MAIL_USER}
 
-algorithm:
-  label_matching_min: 1.0
-  course_length: 5
-  period: '0 0 * * * *'
+form:
+  create-label-if-not-exist: true
+  decoder-version: V1
+  google-application-name: zdrovi-dev
+  google-credentials-file: zdrovi-368272ced627.json
+  google-form-id: ${ENV_GOOGLE_FORM_ID}
+  period: 0 */5 * * * *

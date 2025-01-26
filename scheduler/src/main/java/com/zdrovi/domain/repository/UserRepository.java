@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface UserRepository extends JpaRepository<User, UUID> {
+    List<User> findUserByEmail(String email);
 
     @Query("""
         SELECT u

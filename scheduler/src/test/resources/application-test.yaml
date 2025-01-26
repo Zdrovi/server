@@ -3,7 +3,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop
-    show-sql: true
+#    show-sql: true
   mail:
     host: localhost
     port: 3025
@@ -18,16 +18,25 @@ spring:
             enable: true
         mime:
           charset: UTF-8
+  main:
+    allow-bean-definition-overriding: true
 
 email:
   send:
-    period: '*/3 * * * * *'
+    period: '0/1 * * * * *'
     from: test@zdrovi.com
 
 algorithm:
   label_matching_min: 0.1
   course_length: 3
-  period: '*/2 * * * * *'
+  period: '0/5 * * * * *'
+
+form:
+  create-label-if-not-exist: true
+  decoder-version: V1
+  google-form-id: JUST_FORM_ID
+  period: '0/3 * * * * *'
+  forms-url: http://localhost:2137
 
 logging:
   level:

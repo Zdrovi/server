@@ -122,6 +122,40 @@
                             </configOptions>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>google-forms</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.basedir}/src/main/resources/specs/google-forms.yaml</inputSpec>
+                            <generatorName>spring</generatorName>
+                            <library>spring-boot</library>
+                            <apiPackage>com.zdrovi.google.api</apiPackage>
+                            <modelPackage>com.zdrovi.google.model</modelPackage>
+                            <!--              this template is from the following Github repository but has been modified-->
+                            <!--              https://github.com/OpenAPITools/openapi-generator/blob/master/modules/openapi-generator/src/main/resources/JavaSpring/api.mustache-->
+                            <templateDirectory>${project.basedir}/src/main/resources/template</templateDirectory>
+                            <configOptions>
+                                <generatedConstructorWithRequiredArgs>
+                                    false
+                                </generatedConstructorWithRequiredArgs>
+                                <sourceFolder>src/gen/java/main</sourceFolder>
+                                <useSpringBoot3>true</useSpringBoot3>
+                                <additionalModelTypeAnnotations>
+                                    @lombok.Builder
+                                    @jakarta.validation.Valid
+                                    @lombok.NoArgsConstructor
+                                    @lombok.AllArgsConstructor
+                                </additionalModelTypeAnnotations>
+                                <delegatePattern>true</delegatePattern>
+                                <interfaceOnly>true</interfaceOnly>
+                                <generateForOpenFeign>true</generateForOpenFeign>
+                                <skipDefaultInterface>true</skipDefaultInterface>
+                                <java8>true</java8>
+                            </configOptions>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
         </plugins>

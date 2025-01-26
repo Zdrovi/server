@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static com.google.common.primitives.Shorts.min;
@@ -125,7 +126,7 @@ public class EntityRepository {
 
     @SuppressWarnings("UnusedReturnValue")
     public UserLabel createUserLabel(User user, Label label) {
-        var userLabel =  new UserLabel();
+        var userLabel = new UserLabel();
         userLabel.setUser(user);
         userLabel.setLabel(label);
         userLabel.setMatching((short) 50);
@@ -155,19 +156,48 @@ public class EntityRepository {
 
         List.of("sleep", "stress", "food", "health", "stimulants")
                 .forEach(label_name ->
-            {
-                var label = createLabel(label_name);
-
-                createUserLabel(user, label);
-
-                for (int i = 0; i < contents.size(); i++)
                 {
-                    var content = contents.get(i);
-                    short matching = min(max_matching, (short) (100 - 10 * i));
-                    createContentLabel(content, label, matching);
-                }
-            });
+                    var label = createLabel(label_name);
+
+                    createUserLabel(user, label);
+
+                    for (int i = 0; i < contents.size(); i++) {
+                        var content = contents.get(i);
+                        short matching = min(max_matching, (short) (100 - 10 * i));
+                        createContentLabel(content, label, matching);
+                    }
+                });
         return user;
+    }
+
+    public List<Content> setupContentWithLabels(String title, String rawContent, int contentsCount, short maxMatching) {
+
+        List<Content> contents =
+                IntStream.rangeClosed(1, contentsCount)
+                        .mapToObj(String::valueOf)
+                        .map(n -> createContent(title + n, rawContent))
+                        .toList();
+
+        List<Label> labels = Stream.of(
+                        "sleep_not_enough",
+                        "sleep_low_quality",
+                        "sleep_frequent_wakeups",
+                        "stress_work",
+                        "stress_exhaustion",
+                        "food_obesity",
+                        "food_anorexia",
+                        "food_stimulants")
+                .map(this::createLabel)
+                .toList();
+
+        contents.forEach(content -> {
+            for (int i = 0; i < labels.size(); i++) {
+                short matching = min(maxMatching, (short) (100 - 10 * i));
+                createContentLabel(content, labels.get(i), matching);
+            }
+        });
+
+        return contents;
     }
 
     @SuppressWarnings("UnusedReturnValue")
