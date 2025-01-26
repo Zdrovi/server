@@ -28,7 +28,7 @@ public class ContentSender {
         Optional<UserCourse> topUnfinishedCourse = userCourseRepository.findTopUnfinishedCourseByUserId(user.getId());
         if (topUnfinishedCourse.isPresent()) {
             UserCourse userCourse = topUnfinishedCourse.get();
-            log.debug("Found top unfinished course for user: {}, with course id: {}", user.getId(), userCourse.getId());
+            log.info("Found top unfinished course for user: {}, with stage: {}", user.getEmail(), userCourse.getStage());
             Optional<Content> nextContent = contentRepository.findNextContentForUserCourse(userCourse.getId());
             if (nextContent.isPresent()) {
                 emailSender.sendMailToUser(user, nextContent.get());

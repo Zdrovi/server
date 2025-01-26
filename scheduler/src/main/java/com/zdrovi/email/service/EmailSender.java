@@ -37,7 +37,7 @@ public class EmailSender {
 
     @SneakyThrows
     public void sendMailToUser(final User user, final Content content) {
-        log.info("Sending email for user: {}, with content: {}", user.getName(), content.getId());
+        log.info("Sending email for user: {}, with title: {}", user.getName(), content.getTitle());
         javaMailSender.send(mimeMessage -> {
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, UTF_8.name());
             helper.setFrom(emailConfig.getFrom());

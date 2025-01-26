@@ -24,35 +24,34 @@ public class CourseBuilder {
 
     final private List<Evaluator> evaluators;
 
-    public void prepareCourse(final User user)
-    {
+    public void prepareCourse(final User user) {
         if (courseRepositoryHelper.hasOpenCourse(user)) {
             log.warn("User {} already has open course", user.getId());
             return;
         }
 
-        List<ContentScore> content_scores = contentRepository
+        List<ContentScore> contentScores = contentRepository
                 .findAll()
                 .stream()
                 .map(ContentScore::new)
                 .toList();
 
         for (var evaluator : evaluators) {
-            content_scores = evaluator.evaluate(user, content_scores);
+            contentScores = evaluator.evaluate(user, contentScores);
         }
 
-        var course_content = content_scores
+        var courseContent = contentScores
                 .stream()
                 .sorted((lhs, rhs) -> Float.compare(rhs.getScore(), lhs.getScore()))
                 .limit(config.getCourseLength())
                 .map(ContentScore::getContent)
                 .toList();
 
-        if (course_content.isEmpty()) {
+        if (courseContent.isEmpty()) {
             log.warn("Can't find any content for user: {}", user.getId());
             return;
         }
 
-        courseRepositoryHelper.createCourseForUser(user,course_content);
+        courseRepositoryHelper.createCourseForUser(user,courseContent);
     }
 }
